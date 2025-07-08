@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
 
@@ -18,6 +19,28 @@ US_STATE_CHOICES = [
 ]
 
 STATUS_CHOICES = [('active', 'Active'), ('inactive', 'Inactive')]
+
+USER_STATUS_CHOICES = [
+    ('active', 'Active'),
+    ('inactive', 'Inactive'),
+    ('pending', 'Pending'),
+]
+
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=255)
+    church_id = models.ForeignKey('Church', null=True, blank=True, on_delete=models.SET_NULL, related_name='users')
+    status = models.CharField(max_length=10, choices=USER_STATUS_CHOICES)
+    requires_password_change = models.BooleanField(default=False)
+    # last_login is already included in AbstractUser
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']  # username is still required by AbstractUser
+
+    def __str__(self):
+        return self.email
 
 class Church(models.Model):
     name = models.CharField(max_length=255)

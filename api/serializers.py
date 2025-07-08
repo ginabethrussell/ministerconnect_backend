@@ -1,6 +1,41 @@
 import re
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from rest_framework import serializers
 from .models import Church, US_STATE_CHOICES
+
+User = get_user_model()
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    groups = serializers.ListField(
+        child=serializers.CharField(), write_only=True, required=False
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'name', 'password', 'groups', 'church_id', 'status', 'requires_password_change'
+        ]
+
+    def validate_church(self, value):
+      if value is None:
+          return value  # Allow null if your model allows it
+      if not Church.objects.filter(pk=value.id).exists():
+          raise serializers.ValidationError("The specified church does not exist.")
+      return value
+
+    def create(self, validated_data):
+      group_names = validated_data.pop('groups', [])
+      password = validated_data.pop('password')
+      validated_data['username'] = validated_data['email']
+      user = User(**validated_data)
+      user.set_password(password)
+      user.save()
+      for group_name in group_names:
+            group, created = Group.objects.get_or_create(name=group_name)
+            user.groups.add(group)
+      return user
 
 class ChurchSerializer(serializers.ModelSerializer):
     def validate(self, data):

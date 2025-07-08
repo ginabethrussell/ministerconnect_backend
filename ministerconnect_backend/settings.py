@@ -45,6 +45,8 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
+AUTH_USER_MODEL = 'api.User'
+
 ROOT_URLCONF = 'ministerconnect_backend.urls'
 
 TEMPLATES = [

@@ -130,6 +130,48 @@ python manage.py runserver
 
 Visit [http://localhost:8000](http://localhost:8000) to view the API or Django welcome page.
 
+## API Endpoints
+
+### Create Church
+
+**POST** `/api/churches/create/`
+
+Creates a new church.
+
+**Example request body:**
+```json
+{
+  "name": "Test Church",
+  "email": "test@church.com",
+  "phone": "+14155552671",
+  "website": "https://testchurch.com",
+  "street_address": "123 Main St",
+  "city": "Springfield",
+  "state": "CA",
+  "zipcode": "90210",
+  "status": "active"
+}
+```
+
+### Create User
+
+**POST** `/api/users/create/`
+
+Creates a new user and assigns them to one or more groups and a church (if provided).
+
+**Example request body:**
+```json
+{
+  "email": "user@church.org",
+  "name": "Jane Doe",
+  "password": "securepassword",
+  "groups": ["Church User"],
+  "church_id": 1,
+  "status": "pending",
+  "requires_password_change": true
+}
+```
+
 ## Troubleshooting
 - Ensure your `.env` file is correctly formatted and all required variables are set.
 - If you change database settings, update them in `settings.py` and your local PostgreSQL instance.

@@ -273,6 +273,30 @@ Returns a list of all invite codes. Requires a valid JWT access token in the Aut
 ]
 ```
 
+### Applicant Registration
+
+**POST** `/api/applicants/register/`
+
+Registers a new applicant using an invite code. On success, the user is added to the Applicant group and the invite code's usage count is incremented. Returns a success message. No authentication required.
+
+**Example request body:**
+```json
+{
+  "invite_code": "APPLICANT2024",
+  "email": "applicant@example.com",
+  "password": "securepassword",
+  "first_name": "Jane",
+  "last_name": "Doe"
+}
+```
+
+**Example response:**
+```json
+{
+  "detail": "Registration successful. Please log in."
+}
+```
+
 ## Troubleshooting
 - Ensure your `.env` file is correctly formatted and all required variables are set.
 - If you change database settings, update them in `settings.py` and your local PostgreSQL instance.

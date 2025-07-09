@@ -301,6 +301,40 @@ Registers a new applicant using an invite code. On success, the user is added to
 - Ensure your `.env` file is correctly formatted and all required variables are set.
 - If you change database settings, update them in `settings.py` and your local PostgreSQL instance.
 
+## Testing
+
+This project includes comprehensive automated tests for all API endpoints and functionality. Tests are organized by feature in the `api/tests/` directory:
+
+- `test_church.py` — Tests for church creation and validation
+- `test_user.py` — Tests for user creation and management
+- `test_auth.py` — Tests for JWT authentication (token obtain/refresh)
+- `test_invite_code.py` — Tests for invite code creation and listing
+- `test_applicant.py` — Tests for applicant registration
+
+### Running Tests
+
+Run all tests:
+```bash
+make test
+```
+
+Or run specific test files:
+```bash
+python manage.py test api.tests.test_church
+python manage.py test api.tests.test_user
+```
+
+### Test Coverage
+
+The tests cover:
+- **Success cases** — Valid data and expected responses
+- **Validation errors** — Invalid input data and error messages
+- **Authentication** — Protected endpoints and JWT token handling
+- **Business logic** — Duplicate prevention, invite code usage tracking
+- **Edge cases** — Missing fields, invalid formats, etc.
+
+Tests use Django's test framework with a temporary database, so they don't affect your development data.
+
 ## Code Formatting and Linting
 
 This project uses [Ruff](https://docs.astral.sh/ruff/) for code formatting, linting, and import sorting. Common tasks are available via the Makefile:

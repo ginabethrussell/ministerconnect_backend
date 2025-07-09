@@ -1,8 +1,15 @@
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework import status
 from .models import Church, InviteCode
 from django.contrib.auth import get_user_model
-from .serializers import ChurchSerializer, UserCreateSerializer, InviteCodeSerializer
+from .serializers import (
+    ChurchSerializer,
+    UserCreateSerializer,
+    InviteCodeSerializer,
+    ApplicantRegistrationSerializer,
+)
 
 
 User = get_user_model()
@@ -33,3 +40,17 @@ class InviteCodeListAPIView(generics.ListAPIView):
     queryset = InviteCode.objects.all()
     serializer_class = InviteCodeSerializer
     permission_classes = [IsAuthenticated]
+
+
+class ApplicantRegistrationAPIView(generics.CreateAPIView):
+    serializer_class = ApplicantRegistrationSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"detail": "Registration successful. Please log in."},
+            status=status.HTTP_201_CREATED,
+        )

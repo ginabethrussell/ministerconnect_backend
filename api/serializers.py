@@ -122,3 +122,47 @@ class InviteCodeSerializer(serializers.ModelSerializer):
 
     def get_created_by_name(self, obj):
         return obj.created_by.name if obj.created_by else None
+
+
+class ApplicantRegistrationSerializer(serializers.Serializer):
+    invite_code = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+
+    def validate_invite_code(self, value):
+        try:
+            invite = InviteCode.objects.get(code=value)
+        except InviteCode.DoesNotExist:
+            raise serializers.ValidationError("Invite code does not exist.")
+        if invite.status != "active":
+            raise serializers.ValidationError("Invite code is not active.")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def create(self, validated_data):
+        invite = InviteCode.objects.get(code=validated_data["invite_code"])
+        invite.used_count += 1
+        invite.save()
+        first_name = validated_data["first_name"].strip().title()
+        last_name = validated_data["last_name"].strip().title()
+        full_name = f"{first_name} {last_name}"
+        user = User.objects.create_user(
+            username=validated_data["email"],
+            email=validated_data["email"],
+            password=validated_data["password"],
+            first_name=first_name,
+            last_name=last_name,
+            name=full_name,
+            status="active",
+            is_active=True,
+        )
+        group, _ = Group.objects.get_or_create(name="Applicant")
+        user.groups.add(group)
+        user.save()
+        return user

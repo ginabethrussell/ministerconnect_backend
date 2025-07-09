@@ -217,6 +217,62 @@ Creates a new user and assigns them to one or more groups and a church (if provi
 }
 ```
 
+### Create Invite Code (Requires Authentication)
+
+**POST** `/api/invite-codes/create/`
+
+Creates a new invite code. Requires a valid JWT access token in the Authorization header. The response includes the name of the user who created the code as `created_by_name`.
+
+**Example request body:**
+```json
+{
+  "code": "CHURCH2024",
+  "event": "Spring 2024 Church Registration",
+  "expires_at": "2024-12-31T23:59:59Z"
+}
+```
+
+**Example response:**
+```json
+{
+  "id": 1,
+  "code": "CHURCH2024",
+  "event": "Spring 2024 Church Registration",
+  "used_count": 0,
+  "status": "active",
+  "created_by": 1,
+  "created_by_name": "Jane Doe",
+  "expires_at": "2024-12-31T23:59:59Z",
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z"
+}
+```
+
+### List Invite Codes (Requires Authentication)
+
+**GET** `/api/invite-codes/`
+
+Returns a list of all invite codes. Requires a valid JWT access token in the Authorization header. Each invite code includes the name of the user who created it as `created_by_name`.
+
+**Example response:**
+```json
+[
+  {
+    "id": 1,
+    "code": "CHURCH2024",
+    "event": "Spring 2024 Church Registration",
+    "used_count": 3,
+    "status": "active",
+    "created_by": 1,
+    "created_by_name": "Jane Doe",
+    "expires_at": "2024-12-31T23:59:59Z",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  // ... more invite codes ...
+]
+```
+
 ## Troubleshooting
 - Ensure your `.env` file is correctly formatted and all required variables are set.
 - If you change database settings, update them in `settings.py` and your local PostgreSQL instance.

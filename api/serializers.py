@@ -2,7 +2,7 @@ import re
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import serializers
-from .models import Church, US_STATE_CHOICES
+from .models import Church, US_STATE_CHOICES, InviteCode
 
 User = get_user_model()
 
@@ -15,7 +15,14 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'name', 'password', 'groups', 'church_id', 'status', 'requires_password_change'
+            'id',
+            'email',
+            'name',
+            'password',
+            'groups',
+            'church_id', 
+            'status',
+            'requires_password_change'
         ]
 
     def validate_church(self, value):
@@ -86,4 +93,27 @@ class ChurchSerializer(serializers.ModelSerializer):
             'status',
             'created_at',
             'updated_at',
-        ] 
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+class InviteCodeSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = InviteCode
+        fields = [
+            'id',
+            'code',
+            'event',
+            'used_count',
+            'status',
+            'created_by',
+            'created_by_name',
+            'expires_at',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['created_by', 'created_at', 'updated_at']
+
+    def get_created_by_name(self, obj):
+        return obj.created_by.name if obj.created_by else None

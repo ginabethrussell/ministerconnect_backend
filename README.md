@@ -130,13 +130,58 @@ python manage.py runserver
 
 Visit [http://localhost:8000](http://localhost:8000) to view the API or Django welcome page.
 
+## Authentication (JWT)
+
+This API uses JWT (JSON Web Token) authentication. You must obtain a token and include it in the Authorization header for all protected endpoints.
+
+### Obtain Token
+
+**POST** `/api/token/`
+
+Request body:
+```json
+{
+  "email": "user@church.org",
+  "password": "yourpassword"
+}
+```
+Response:
+```json
+{
+  "refresh": "<refresh_token>",
+  "access": "<access_token>"
+}
+```
+
+### Refresh Token
+
+**POST** `/api/token/refresh/`
+
+Request body:
+```json
+{
+  "refresh": "<refresh_token>"
+}
+```
+Response:
+```json
+{
+  "access": "<new_access_token>"
+}
+```
+
+Include the access token in the Authorization header for all requests to protected endpoints:
+```
+Authorization: Bearer <access_token>
+```
+
 ## API Endpoints
 
-### Create Church
+### Create Church (Requires Authentication)
 
 **POST** `/api/churches/create/`
 
-Creates a new church.
+Creates a new church. Requires a valid JWT access token in the Authorization header.
 
 **Example request body:**
 ```json
@@ -153,11 +198,11 @@ Creates a new church.
 }
 ```
 
-### Create User
+### Create User (Requires Authentication)
 
 **POST** `/api/users/create/`
 
-Creates a new user and assigns them to one or more groups and a church (if provided).
+Creates a new user and assigns them to one or more groups and a church (if provided). Requires a valid JWT access token in the Authorization header.
 
 **Example request body:**
 ```json

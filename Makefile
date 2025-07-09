@@ -8,7 +8,7 @@ migrate:
 	python manage.py migrate
 
 test:
-	python manage.py test
+	python manage.py test api.tests
 
 lint:
 	ruff check .

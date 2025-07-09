@@ -277,5 +277,16 @@ Returns a list of all invite codes. Requires a valid JWT access token in the Aut
 - Ensure your `.env` file is correctly formatted and all required variables are set.
 - If you change database settings, update them in `settings.py` and your local PostgreSQL instance.
 
+## Code Formatting and Linting
+
+This project uses [Ruff](https://docs.astral.sh/ruff/) for code formatting, linting, and import sorting. Common tasks are available via the Makefile:
+
+- `make lint` — Check code for linting and style issues (does not modify files)
+- `make fix` — Automatically fix linting issues (including import sorting)
+- `make format` — Format code using Ruff's formatter
+- `make allfix` — Format code and then auto-fix issues
+
+Run these commands from the `ministerconnect_backend` directory to keep your codebase clean and consistent before committing changes.
+
 ## License
 MIT 

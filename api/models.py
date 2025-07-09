@@ -26,6 +26,11 @@ USER_STATUS_CHOICES = [
     ('pending', 'Pending'),
 ]
 
+INVITE_CODE_STATUS_CHOICES = [
+    ('active', 'Active'),
+    ('expired', 'Expired'),
+]
+
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
@@ -66,3 +71,16 @@ class Church(models.Model):
 
     def __str__(self):
         return self.name
+
+class InviteCode(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    event = models.CharField(max_length=255)
+    used_count = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=10, choices=INVITE_CODE_STATUS_CHOICES, default='active')
+    created_by = models.ForeignKey('User', on_delete=models.CASCADE, related_name='invite_codes')
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.code} ({self.event})"

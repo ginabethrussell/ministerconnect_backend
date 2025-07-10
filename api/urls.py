@@ -8,7 +8,7 @@ from .views import (
     UserCreateAPIView,
     InviteCodeCreateAPIView,
     InviteCodeListAPIView,
-    ApplicantRegistrationAPIView,
+    CandidateRegistrationAPIView,
     UserMeAPIView,
 )
 
@@ -24,9 +24,9 @@ urlpatterns = [
     ),
     path("invite-codes/", InviteCodeListAPIView.as_view(), name="invite-code-list"),
     path(
-        "applicants/register/",
-        ApplicantRegistrationAPIView.as_view(),
-        name="applicant-register",
+        "candidates/register/",
+        CandidateRegistrationAPIView.as_view(),
+        name="candidate-register",
     ),
     path("user/me/", UserMeAPIView.as_view(), name="user-me"),
 ]

@@ -124,7 +124,7 @@ class InviteCodeSerializer(serializers.ModelSerializer):
         return obj.created_by.name if obj.created_by else None
 
 
-class ApplicantRegistrationSerializer(serializers.Serializer):
+class CandidateRegistrationSerializer(serializers.Serializer):
     invite_code = serializers.CharField()
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -162,7 +162,7 @@ class ApplicantRegistrationSerializer(serializers.Serializer):
             status="active",
             is_active=True,
         )
-        group, _ = Group.objects.get_or_create(name="Applicant")
+        group, _ = Group.objects.get_or_create(name="Candidate")
         user.groups.add(group)
         user.save()
         return user

@@ -9,7 +9,9 @@ from .serializers import (
     UserCreateSerializer,
     InviteCodeSerializer,
     ApplicantRegistrationSerializer,
+    UserMeSerializer,
 )
+from rest_framework.views import APIView
 
 
 User = get_user_model()
@@ -54,3 +56,11 @@ class ApplicantRegistrationAPIView(generics.CreateAPIView):
             {"detail": "Registration successful. Please log in."},
             status=status.HTTP_201_CREATED,
         )
+
+
+class UserMeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserMeSerializer(request.user)
+        return Response(serializer.data)

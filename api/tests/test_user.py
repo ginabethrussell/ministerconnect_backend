@@ -86,3 +86,19 @@ class UserAPITests(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)
+
+    def test_user_me_authenticated(self):
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
+        response = self.client.get("/api/user/me/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(data["id"], self.user.id)
+        self.assertEqual(data["email"], self.user.email)
+        self.assertEqual(data["name"], self.user.name)
+        self.assertEqual(data["status"], self.user.status)
+        self.assertIn("groups", data)
+        self.assertIsInstance(data["groups"], list)
+
+    def test_user_me_unauthenticated(self):
+        response = self.client.get("/api/user/me/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

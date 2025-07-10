@@ -9,6 +9,7 @@ from .views import (
     InviteCodeCreateAPIView,
     InviteCodeListAPIView,
     ApplicantRegistrationAPIView,
+    UserMeAPIView,
 )
 
 urlpatterns = [
@@ -27,4 +28,5 @@ urlpatterns = [
         ApplicantRegistrationAPIView.as_view(),
         name="applicant-register",
     ),
+    path("user/me/", UserMeAPIView.as_view(), name="user-me"),
 ]

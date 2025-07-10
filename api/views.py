@@ -8,7 +8,7 @@ from .serializers import (
     ChurchSerializer,
     UserCreateSerializer,
     InviteCodeSerializer,
-    ApplicantRegistrationSerializer,
+    CandidateRegistrationSerializer,
     UserMeSerializer,
 )
 from rest_framework.views import APIView
@@ -44,8 +44,8 @@ class InviteCodeListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
 
-class ApplicantRegistrationAPIView(generics.CreateAPIView):
-    serializer_class = ApplicantRegistrationSerializer
+class CandidateRegistrationAPIView(generics.CreateAPIView):
+    serializer_class = CandidateRegistrationSerializer
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):

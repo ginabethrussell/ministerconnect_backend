@@ -273,17 +273,17 @@ Returns a list of all invite codes. Requires a valid JWT access token in the Aut
 ]
 ```
 
-### Applicant Registration
+### Candidate Registration
 
-**POST** `/api/applicants/register/`
+**POST** `/api/candidates/register/`
 
-Registers a new applicant using an invite code. On success, the user is added to the Applicant group and the invite code's usage count is incremented. Returns a success message. No authentication required.
+Registers a new candidate using an invite code. On success, the user is added to the Candidate group and the invite code's usage count is incremented. Returns a success message. No authentication required.
 
 **Example request body:**
 ```json
 {
-  "invite_code": "APPLICANT2024",
-  "email": "applicant@example.com",
+  "invite_code": "CANDIDATE2024",
+  "email": "candidate@example.com",
   "password": "securepassword",
   "first_name": "Jane",
   "last_name": "Doe"

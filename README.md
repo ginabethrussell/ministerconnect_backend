@@ -297,6 +297,27 @@ Registers a new applicant using an invite code. On success, the user is added to
 }
 ```
 
+### Get Current User Info (Requires Authentication)
+
+**GET** `/api/user/me/`
+
+Returns information about the currently authenticated user, including their groups. Requires a valid JWT access token in the Authorization header.
+
+**Example response:**
+```json
+{
+  "id": 1,
+  "email": "authuser@church.org",
+  "name": "Auth User",
+  "church_id": 1,
+  "status": "active",
+  "requires_password_change": false,
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z",
+  "groups": ["Church User"]
+}
+```
+
 ## Troubleshooting
 - Ensure your `.env` file is correctly formatted and all required variables are set.
 - If you change database settings, update them in `settings.py` and your local PostgreSQL instance.

@@ -166,3 +166,25 @@ class ApplicantRegistrationSerializer(serializers.Serializer):
         user.groups.add(group)
         user.save()
         return user
+
+
+class UserMeSerializer(serializers.ModelSerializer):
+    groups = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "name",
+            "church_id",
+            "status",
+            "requires_password_change",
+            "created_at",
+            "updated_at",
+            "groups",
+        ]
+        read_only_fields = fields
+
+    def get_groups(self, obj):
+        return [group.name for group in obj.groups.all()]

@@ -29,6 +29,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "status",
             "requires_password_change",
         ]
+        read_only_fields = ["name"]
 
     def validate_church(self, value):
         if value is None:

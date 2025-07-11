@@ -208,7 +208,8 @@ Creates a new user and assigns them to one or more groups and a church (if provi
 ```json
 {
   "email": "user@church.org",
-  "name": "Jane Doe",
+  "first_name": "Jane",
+  "last_name": "Doe",
   "password": "securepassword",
   "groups": ["Church User"],
   "church_id": 1,

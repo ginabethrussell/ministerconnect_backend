@@ -42,9 +42,9 @@ class UserAPITests(TestCase):
         Group.objects.get_or_create(name="Church User")
         self.valid_payload = {
             "email": "user@church.org",
-            "username": "user@church.org",
-            "name": "Jane Doe",
             "password": "securepassword",
+            "first_name": "Jane",
+            "last_name": "Doe",
             "groups": ["Church User"],
             "church_id": self.church.id,
             "status": "pending",

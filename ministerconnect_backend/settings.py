@@ -20,7 +20,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Allow requests from your frontend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://ministerconnect.vercel.app/",
+    "https://ministerconnect.vercel.app",
 ]
 
 # Application definition

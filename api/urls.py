@@ -10,6 +10,7 @@ from .views import (
     InviteCodeListAPIView,
     CandidateRegistrationAPIView,
     UserMeAPIView,
+    ResetPasswordAPIView,
 )
 
 urlpatterns = [
@@ -29,4 +30,5 @@ urlpatterns = [
         name="candidate-register",
     ),
     path("user/me/", UserMeAPIView.as_view(), name="user-me"),
+    path("reset-password/", ResetPasswordAPIView.as_view(), name="reset-password"),
 ]

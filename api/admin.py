@@ -1,14 +1,21 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from .models import User, Church, InviteCode
 
 
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(BaseUserAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     model = User
-    list_display = ["email", "is_active", "is_staff"]  # Adjust as needed
+    # Show all the fields you want, including requires_password_change
+    list_display = BaseUserAdmin.list_display + ("requires_password_change",)
+    fieldsets = BaseUserAdmin.fieldsets + (
+        (None, {"fields": ("requires_password_change",)}),
+    )
+    add_fieldsets = BaseUserAdmin.add_fieldsets + (
+        (None, {"fields": ("requires_password_change",)}),
+    )
 
 
 # Register your models here.

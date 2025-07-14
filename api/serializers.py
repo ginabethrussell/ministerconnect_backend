@@ -66,6 +66,22 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
+class ResetPasswordSerializer(serializers.Serializer):
+    temporary_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data["temporary_password"] == data["new_password"]:
+            raise serializers.ValidationError(
+                "New password must be different from the current password."
+            )
+        if len(data["new_password"]) < 8:
+            raise serializers.ValidationError(
+                "New password must be at least 8 characters long."
+            )
+        return data
+
+
 class ChurchSerializer(serializers.ModelSerializer):
     def validate(self, data):
         name = data["name"].strip().lower()

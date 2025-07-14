@@ -10,6 +10,7 @@ from .serializers import (
     InviteCodeSerializer,
     CandidateRegistrationSerializer,
     UserMeSerializer,
+    ResetPasswordSerializer,
 )
 from rest_framework.views import APIView
 
@@ -64,3 +65,28 @@ class UserMeAPIView(APIView):
     def get(self, request):
         serializer = UserMeSerializer(request.user)
         return Response(serializer.data)
+
+
+class ResetPasswordAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+
+        # Verify the temporary password
+        if not user.check_password(serializer.validated_data["temporary_password"]):
+            return Response(
+                {"detail": "Temporary password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Set the new password
+        user.set_password(serializer.validated_data["new_password"])
+        user.requires_password_change = False
+        user.save()
+
+        return Response(
+            {"detail": "Password changed successfully."}, status=status.HTTP_200_OK
+        )

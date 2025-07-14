@@ -298,6 +298,27 @@ Registers a new candidate using an invite code. On success, the user is added to
 }
 ```
 
+### Reset Password (Requires Authentication)
+
+**POST** `/api/reset-password/`
+
+Allows an authenticated user who is required to change their password (e.g., after admin reset or first login) to set a new password.
+
+**Example request body:**
+```json
+{
+  "temporary_password": "oldpassword123",
+  "new_password": "newsecurepassword456"
+}
+```
+
+**Example response:**
+```json
+{
+  "detail": "Password changed successfully."
+}
+```
+
 ### Get Current User Info (Requires Authentication)
 
 **GET** `/api/user/me/`

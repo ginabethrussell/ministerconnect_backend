@@ -1,7 +1,9 @@
 import os
+import logging
 import environ
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -11,6 +13,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
+
+logging.warning(f"DEBUG value at runtime: {DEBUG}")
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
@@ -133,6 +137,7 @@ if not DEBUG:  # Use S3 in production
     # Optional: make files public by default
     AWS_DEFAULT_ACL = "public-read"
     AWS_QUERYSTRING_AUTH = False
+    logging.warning(f"{DEFAULT_FILE_STORAGE}")
 else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = os.path.join(BASE_DIR, "media")

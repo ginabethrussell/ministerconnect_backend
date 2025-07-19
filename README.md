@@ -340,6 +340,70 @@ Returns information about the currently authenticated user, including their grou
 }
 ```
 
+### Candidate Profile (Automatic Creation & Update)
+
+When a candidate registers, a draft profile is automatically created for them. Candidates can view and update their profile using the `/api/profile/me/` endpoint.
+
+#### Get Profile (Requires Authentication)
+
+**GET** `/api/profile/me/`
+
+Returns the authenticated user's profile, including the invite code string and a URL to the uploaded resume (if any).
+
+**Example response:**
+```json
+{
+  "id": 1,
+  "invite_code": 2,
+  "invite_code_string": "CANDIDATE2024",
+  "street_address": "123 Main St",
+  "city": "Lexington",
+  "state": "KY",
+  "zipcode": "40502",
+  "status": "draft",
+  "resume": "https://your-bucket.s3.amazonaws.com/resumes/GBR_RESUME.pdf",
+  "video_url": null,
+  "placement_preferences": ["Youth Ministry"],
+  "submitted_at": null,
+  "created_at": "2025-07-19T18:20:02.272847Z",
+  "updated_at": "2025-07-19T18:37:23.310730Z",
+  "user": 17
+}
+```
+
+#### Update Profile (Requires Authentication)
+
+**PUT/PATCH** `/api/profile/me/`
+
+Updates the authenticated user's profile. Supports file upload for the `resume` field (PDF). Use `form-data` in Postman or your frontend.
+
+**Example PATCH request body:**
+```json
+{
+  "status": "pending"
+}
+```
+
+**Example PUT request (form-data):**
+- `street_address`: 456 New St (Text)
+- `city`: New City (Text)
+- `state`: NY (Text)
+- `zipcode`: 10001 (Text)
+- `placement_preferences`: ["Music Ministry"] (Text, JSON string)
+- `status`: approved (Text)
+- `resume`: (select PDF file) (File)
+
+**Note:**
+- The `resume` field will return a URL to the uploaded file (S3 in production, local in development).
+- The `invite_code_string` field provides the human-readable invite code for display.
+- First and last name are managed on the user object, not the profile.
+
+### Testing Profile Endpoints
+
+- Unit tests for profile creation and update are in `api/tests/test_profile.py` and `api/tests/test_profile_me.py`.
+- To test file uploads locally, ensure you are running with `DEBUG=True` and have the media static pattern in your main `urls.py`.
+- In production, uploaded files are stored in S3 and the `resume` field will be an S3 URL.
+
 ## Troubleshooting
 - Ensure your `.env` file is correctly formatted and all required variables are set.
 - If you change database settings, update them in `settings.py` and your local PostgreSQL instance.

@@ -1,4 +1,5 @@
 import re
+import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import serializers
@@ -6,6 +7,7 @@ from .models import Church, US_STATE_CHOICES, InviteCode, Profile
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -256,3 +258,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_invite_code_string(self, obj):
         return obj.invite_code.code if obj.invite_code else None
+    
+    def update(self, instance, validated_data):
+        logger.warning(f"Updating profile with data: {validated_data}")
+        return super().update(instance, validated_data)

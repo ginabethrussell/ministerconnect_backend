@@ -1,3 +1,5 @@
+import logging
+from django.core.files.storage import default_storage
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -15,6 +17,7 @@ from .serializers import (
 )
 from rest_framework.views import APIView
 
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -112,4 +115,10 @@ class ProfileMeUpdateAPIView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
+        # Log the storage backend in use
+        logger.warning(f"Storage backend in use: {default_storage.__class__}")
         return self.request.user.profile
+
+    def update(self, request, *args, **kwargs):
+        logger.warning(f"Request.FILES: {request.FILES}")
+        return super().update(request, *args, **kwargs)

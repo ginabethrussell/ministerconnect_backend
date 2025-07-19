@@ -2,7 +2,7 @@ import re
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import serializers
-from .models import Church, US_STATE_CHOICES, InviteCode
+from .models import Church, US_STATE_CHOICES, InviteCode, Profile
 
 User = get_user_model()
 
@@ -14,6 +14,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
     )
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
+    invite_code = serializers.PrimaryKeyRelatedField(
+        queryset=InviteCode.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = User
@@ -28,6 +31,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "church_id",
             "status",
             "requires_password_change",
+            "invite_code",
         ]
         read_only_fields = ["name"]
 
@@ -197,15 +201,20 @@ class CandidateRegistrationSerializer(serializers.Serializer):
             name=full_name,
             status="active",
             is_active=True,
+            invite_code=invite,  # Assign invite_code foreign key
         )
         group, _ = Group.objects.get_or_create(name="Candidate")
         user.groups.add(group)
         user.save()
+        # --- Create draft profile ---
+        Profile.objects.create(user=user, invite_code=invite, status="draft")
         return user
 
 
 class UserMeSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField(read_only=True)
+    invite_code = serializers.PrimaryKeyRelatedField(read_only=True)
+    invite_code_string = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -219,8 +228,31 @@ class UserMeSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "groups",
+            "invite_code",
+            "invite_code_string",
         ]
         read_only_fields = fields
 
     def get_groups(self, obj):
         return [group.name for group in obj.groups.all()]
+
+    def get_invite_code_string(self, obj):
+        return obj.invite_code.code if obj.invite_code else None
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    invite_code_string = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = "__all__"
+        read_only_fields = [
+            "user",
+            "invite_code",
+            "created_at",
+            "updated_at",
+            "invite_code_string",
+        ]
+
+    def get_invite_code_string(self, obj):
+        return obj.invite_code.code if obj.invite_code else None

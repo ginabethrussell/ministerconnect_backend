@@ -11,6 +11,7 @@ from .views import (
     CandidateRegistrationAPIView,
     UserMeAPIView,
     ResetPasswordAPIView,
+    ProfileMeUpdateAPIView,
 )
 
 urlpatterns = [
@@ -31,4 +32,5 @@ urlpatterns = [
     ),
     path("user/me/", UserMeAPIView.as_view(), name="user-me"),
     path("reset-password/", ResetPasswordAPIView.as_view(), name="reset-password"),
+    path("profile/me/", ProfileMeUpdateAPIView.as_view(), name="profile-me"),
 ]

@@ -7,6 +7,14 @@ logger = logging.getLogger(__name__)
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Log package versions using importlib instead of pkg_resources
+try:
+    import storages
+    import boto3
+    logging.warning(f"django-storages version: {storages.__version__}")
+    logging.warning(f"boto3 version: {boto3.__version__}")
+except ImportError:
+    logging.warning("Could not import django-storages or boto3 to check versions")
 # Set up environment loading
 env = environ.Env(DEBUG=(bool, False))
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))

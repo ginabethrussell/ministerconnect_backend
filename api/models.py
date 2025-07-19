@@ -2,6 +2,11 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
 from django.conf import settings
+from storages.backends.s3boto3 import S3Boto3Storage
+
+class MediaStorage(S3Boto3Storage):
+    bucket_name = 'ministerconnect-media-uploads'
+    custom_domain = False
 
 US_STATE_CHOICES = [
     ("AL", "Alabama"),
@@ -158,7 +163,7 @@ class Profile(models.Model):
         ],
         default="draft",
     )
-    resume = models.FileField(upload_to="resumes/", null=True, blank=True)
+    resume = models.FileField(upload_to="resumes/", storage=MediaStorage(), null=True, blank=True )
     video_url = models.URLField(null=True, blank=True)
     placement_preferences = models.JSONField(default=list, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)

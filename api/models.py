@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
+from django.conf import settings
 
 US_STATE_CHOICES = [
     ("AL", "Alabama"),
@@ -77,7 +78,9 @@ class User(AbstractUser):
     )
     status = models.CharField(max_length=10, choices=USER_STATUS_CHOICES)
     requires_password_change = models.BooleanField(default=False)
-    # last_login is already included in AbstractUser
+    invite_code = models.ForeignKey(
+        "InviteCode", on_delete=models.SET_NULL, null=True, blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -132,3 +135,35 @@ class InviteCode(models.Model):
 
     def __str__(self):
         return f"{self.code} ({self.event})"
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
+    )
+    invite_code = models.ForeignKey(
+        "InviteCode", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    street_address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=2)
+    zipcode = models.CharField(max_length=10)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("draft", "Draft"),
+            ("pending", "Pending"),
+            ("approved", "Approved"),
+            ("rejected", "Rejected"),
+        ],
+        default="draft",
+    )
+    resume = models.FileField(upload_to="resumes/", null=True, blank=True)
+    video_url = models.URLField(null=True, blank=True)
+    placement_preferences = models.JSONField(default=list, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.user.email})"

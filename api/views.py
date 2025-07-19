@@ -1,8 +1,8 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import status
-from .models import Church, InviteCode
+from rest_framework.generics import RetrieveUpdateAPIView
+from .models import Church, InviteCode, Profile
 from django.contrib.auth import get_user_model
 from .serializers import (
     ChurchSerializer,
@@ -11,6 +11,7 @@ from .serializers import (
     CandidateRegistrationSerializer,
     UserMeSerializer,
     ResetPasswordSerializer,
+    ProfileSerializer,
 )
 from rest_framework.views import APIView
 
@@ -90,3 +91,25 @@ class ResetPasswordAPIView(APIView):
         return Response(
             {"detail": "Password changed successfully."}, status=status.HTTP_200_OK
         )
+
+
+class ProfileMeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = request.user.profile
+        except Profile.DoesNotExist:
+            return Response(
+                {"detail": "Profile not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data)
+
+
+class ProfileMeUpdateAPIView(RetrieveUpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user.profile

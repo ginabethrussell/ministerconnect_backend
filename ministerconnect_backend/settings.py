@@ -145,6 +145,12 @@ if not DEBUG:  # Use S3 in production
     # Optional: make files public by default
     AWS_DEFAULT_ACL = "public-read"
     AWS_QUERYSTRING_AUTH = False
+
+    AWS_DEFAULT_ACL = None  # Don't set ACLs
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+    AWS_S3_FILE_OVERWRITE = False
     logging.warning(f"{DEFAULT_FILE_STORAGE}")
 else:
     MEDIA_URL = "/media/"

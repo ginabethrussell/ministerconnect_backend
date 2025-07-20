@@ -1,6 +1,3 @@
-import logging
-from django.conf import settings
-from django.core.files.storage import default_storage
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -18,7 +15,6 @@ from .serializers import (
 )
 from rest_framework.views import APIView
 
-logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -101,11 +97,6 @@ class ProfileMeAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        logger.warning(f"GET ProfileMeAPIView - DEBUG: {settings.DEBUG}")
-        logger.warning(f"GET ProfileMeAPIView - DEFAULT_FILE_STORAGE: {getattr(settings, 'DEFAULT_FILE_STORAGE', 'Not set')}")
-        logger.warning(f"GET ProfileMeAPIView - Storage backend in use: {default_storage.__class__}")
-        logger.warning(f"GET ProfileMeAPIView - AWS_STORAGE_BUCKET_NAME: {getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'Not set')}")
-        
         try:
             profile = request.user.profile
         except Profile.DoesNotExist:
@@ -121,23 +112,10 @@ class ProfileMeUpdateAPIView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        # Log the storage backend in use
-        logger.warning(f"GET ProfileMeUpdateAPIView - DEBUG: {settings.DEBUG}")
-        logger.warning(f"GET ProfileMeUpdateAPIView - DEFAULT_FILE_STORAGE: {getattr(settings, 'DEFAULT_FILE_STORAGE', 'Not set')}")
-        logger.warning(f"GET ProfileMeUpdateAPIView - Storage backend in use: {default_storage.__class__}")
-        logger.warning(f"GET ProfileMeUpdateAPIView - AWS_STORAGE_BUCKET_NAME: {getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'Not set')}")
         return self.request.user.profile
 
     def update(self, request, *args, **kwargs):
-        logger.warning(f"UPDATE ProfileMeUpdateAPIView - Request.FILES: {request.FILES}")
-        logger.warning(f"UPDATE ProfileMeUpdateAPIView - DEBUG: {settings.DEBUG}")
-        logger.warning(f"UPDATE ProfileMeUpdateAPIView - DEFAULT_FILE_STORAGE: {getattr(settings, 'DEFAULT_FILE_STORAGE', 'Not set')}")
-        logger.warning(f"UPDATE ProfileMeUpdateAPIView - Storage backend in use: {default_storage.__class__}")
-        logger.warning(f"UPDATE ProfileMeUpdateAPIView - AWS_STORAGE_BUCKET_NAME: {getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'Not set')}")
-        
-        # Log the actual storage backend being used for file uploads
         if request.FILES:
             for field_name, uploaded_file in request.FILES.items():
-                logger.warning(f"UPDATE ProfileMeUpdateAPIView - File '{field_name}': {uploaded_file.name} ({uploaded_file.size} bytes)")
-        
+                pass
         return super().update(request, *args, **kwargs)

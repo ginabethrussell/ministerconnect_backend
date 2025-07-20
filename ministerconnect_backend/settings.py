@@ -1,28 +1,16 @@
 import os
-import logging
 import environ
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Log package versions using importlib instead of pkg_resources
-try:
-    import storages
-    import boto3
-    logging.warning(f"django-storages version: {storages.__version__}")
-    logging.warning(f"boto3 version: {boto3.__version__}")
-except ImportError:
-    logging.warning("Could not import django-storages or boto3 to check versions")
 # Set up environment loading
 env = environ.Env(DEBUG=(bool, False))
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
-
-logging.warning(f"DEBUG value at runtime: {DEBUG}")
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
@@ -140,32 +128,38 @@ if not DEBUG:  # Use S3 in production
     AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
     AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
     AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-2")
-    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    AWS_S3_CUSTOM_DOMAIN = (
+        f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    )
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
-    # Optional: make files public by default
-    AWS_DEFAULT_ACL = "public-read"
-    AWS_QUERYSTRING_AUTH = False
 
-    AWS_DEFAULT_ACL = None  # Don't set ACLs
+    AWS_DEFAULT_ACL = None
     AWS_S3_OBJECT_PARAMETERS = {
-        'CacheControl': 'max-age=86400',
+        "CacheControl": "max-age=86400",
     }
+    AWS_QUERYSTRING_AUTH = False
     AWS_S3_FILE_OVERWRITE = False
-    logging.warning(f"{DEFAULT_FILE_STORAGE}")
 else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",  # Only show errors, not warnings/info
+            "propagate": False,
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
     },
 }

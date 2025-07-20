@@ -4,6 +4,12 @@ from django.db.models.functions import Lower
 from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
 
+if settings.DEBUG:
+    resume_storage = None  # Use default (local)
+else:
+    resume_storage = S3Boto3Storage()
+
+
 US_STATE_CHOICES = [
     ("AL", "Alabama"),
     ("AK", "Alaska"),
@@ -159,7 +165,9 @@ class Profile(models.Model):
         ],
         default="draft",
     )
-    resume = models.FileField(upload_to="resumes/", storage=S3Boto3Storage(), null=True, blank=True )
+    resume = models.FileField(
+        upload_to="resumes/", storage=resume_storage, null=True, blank=True
+    )
     video_url = models.URLField(null=True, blank=True)
     placement_preferences = models.JSONField(default=list, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)

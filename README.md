@@ -398,6 +398,27 @@ Updates the authenticated user's profile. Supports file upload for the `resume` 
 - The `invite_code_string` field provides the human-readable invite code for display.
 - First and last name are managed on the user object, not the profile.
 
+### About Resume File Storage (AWS S3)
+
+> **Resume files are stored in AWS S3 in production.**  
+> In local development, files are stored on the local filesystem.  
+> 
+> **Why is the storage backend set directly on the model?**  
+> Django determines the storage backend for file fields at the time the model is loaded (imported), not at runtime. This means that relying solely on the `DEFAULT_FILE_STORAGE` setting can lead to issues in production environments (like Render) where settings may not be fully loaded before models are imported.  
+> 
+> To ensure that resume files are always stored in the correct location, the `storage` argument is set explicitly on the `resume` field in the `Profile` model:
+> 
+> ```python
+> if settings.DEBUG:
+>     resume_storage = None  # Use default (local)
+> else:
+>     resume_storage = S3Boto3Storage()
+> 
+> resume = models.FileField(upload_to="resumes/", storage=resume_storage, null=True, blank=True)
+> ```
+> 
+> This guarantees that S3 is used in production and local storage is used in development, regardless of import timing or environment variable loading.
+
 ### Testing Profile Endpoints
 
 - Unit tests for profile creation and update are in `api/tests/test_profile.py` and `api/tests/test_profile_me.py`.

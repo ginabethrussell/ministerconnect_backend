@@ -9,6 +9,7 @@ User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
+
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     groups = serializers.ListField(
@@ -258,7 +259,6 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_invite_code_string(self, obj):
         return obj.invite_code.code if obj.invite_code else None
-    
+
     def update(self, instance, validated_data):
-        logger.warning(f"Updating profile with data: {validated_data}")
         return super().update(instance, validated_data)

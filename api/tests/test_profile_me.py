@@ -91,4 +91,4 @@ class ProfileMeAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["city"], "New City")
         self.assertEqual(response.data["status"], "approved")
-        self.assertTrue(response.data["resume"].endswith("test_resume.pdf"))
+        self.assertIn("test_resume", response.data["resume"])

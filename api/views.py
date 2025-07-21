@@ -1,4 +1,5 @@
 from rest_framework import generics, status
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateAPIView
@@ -12,6 +13,7 @@ from .serializers import (
     UserMeSerializer,
     ResetPasswordSerializer,
     ProfileSerializer,
+    ProfileResetSerializer,
 )
 from rest_framework.views import APIView
 
@@ -110,6 +112,7 @@ class ProfileMeAPIView(APIView):
 class ProfileMeUpdateAPIView(RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)  # <-- Add this line
 
     def get_object(self):
         return self.request.user.profile
@@ -119,3 +122,29 @@ class ProfileMeUpdateAPIView(RetrieveUpdateAPIView):
             for field_name, uploaded_file in request.FILES.items():
                 pass
         return super().update(request, *args, **kwargs)
+
+
+class ProfileResetAPIView(generics.CreateAPIView):
+    """
+    Reset the authenticated user's profile to draft state.
+    This will delete all profile data and create a fresh draft profile.
+    """
+
+    serializer_class = ProfileResetSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data={})
+        serializer.is_valid(raise_exception=True)
+        profile = serializer.save()
+
+        return Response(
+            {
+                "detail": "Profile reset to draft successfully.",
+                "profile": ProfileSerializer(profile).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)

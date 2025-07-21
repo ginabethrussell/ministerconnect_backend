@@ -224,6 +224,8 @@ class UserMeSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "email",
+            "first_name",
+            "last_name",
             "name",
             "church_id",
             "status",
@@ -260,5 +262,41 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_invite_code_string(self, obj):
         return obj.invite_code.code if obj.invite_code else None
 
+    def validate(self, data):
+        # Only enforce required fields if status is 'pending'
+        status = data.get("status") or getattr(self.instance, "status", None)
+        if status == "pending":
+            required_fields = [
+                "phone",
+                "street_address",
+                "city",
+                "state",
+                "zipcode",
+                "resume",
+            ]
+            missing = [
+                field
+                for field in required_fields
+                if not data.get(field)
+                and not (self.instance and getattr(self.instance, field, None))
+            ]
+            if missing:
+                raise serializers.ValidationError(
+                    {field: "This field is required." for field in missing}
+                )
+        return data
+
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
+
+
+class ProfileResetSerializer(serializers.Serializer):
+    """
+    Serializer for resetting a profile to draft state.
+    No input fields required - just calls the model method.
+    """
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        invite_code = user.invite_code
+        return Profile.reset_to_draft(user, invite_code)

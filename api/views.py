@@ -1,4 +1,5 @@
 from rest_framework import generics, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -16,6 +17,7 @@ from .serializers import (
     ProfileResetSerializer,
 )
 from rest_framework.views import APIView
+from .permissions import IsAdminOrChurch
 
 
 User = get_user_model()
@@ -94,6 +96,23 @@ class ResetPasswordAPIView(APIView):
             {"detail": "Password changed successfully."}, status=status.HTTP_200_OK
         )
 
+
+class ProfileListAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminOrChurch]
+
+    def get(self, request):
+        status_param = request.query_params.get('status')
+
+        profiles = Profile.objects.select_related("user").all()
+
+        if status_param:
+            profiles = profiles.filter(status=status_param)
+
+        paginator = PageNumberPagination()
+        page = paginator.paginate_queryset(profiles, request)
+        serializer = ProfileSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+    
 
 class ProfileMeAPIView(APIView):
     permission_classes = [IsAuthenticated]

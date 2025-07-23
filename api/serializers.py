@@ -2,6 +2,7 @@ import re
 import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import transaction
 from rest_framework import serializers
 from .models import Church, US_STATE_CHOICES, InviteCode, Profile, Job
 
@@ -90,6 +91,8 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class ChurchSerializer(serializers.ModelSerializer):
+    users = UserCreateSerializer(many=True, required=False, write_only=True)
+
     def validate(self, data):
         name = data["name"].strip().lower()
         city = data["city"].strip().lower()
@@ -103,9 +106,20 @@ class ChurchSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        users_data = validated_data.pop("users", [])
         validated_data["name"] = validated_data["name"].strip().title()
         validated_data["city"] = validated_data["city"].strip().title()
-        return super().create(validated_data)
+
+        with transaction.atomic():
+            church = super().create(validated_data)
+            
+            for user_data in users_data:
+                user_data["church_id"] = church  # assign church foreign key
+                serializer = UserCreateSerializer(data=user_data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+
+        return church
 
     def validate_state(self, value):
         valid_states = dict(US_STATE_CHOICES)
@@ -140,6 +154,7 @@ class ChurchSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
             "updated_at",
+            "users",
         ]
         read_only_fields = ["created_at", "updated_at"]
 

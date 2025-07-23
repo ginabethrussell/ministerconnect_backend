@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import serializers
-from .models import Church, US_STATE_CHOICES, InviteCode, Profile
+from .models import Church, US_STATE_CHOICES, InviteCode, Profile, Job
 
 User = get_user_model()
 
@@ -306,3 +306,8 @@ class ProfileStatusSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['id','status']
         read_only_fields = ['id']
+
+class JobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Job
+        fields = '__all__'

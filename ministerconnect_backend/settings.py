@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "api",
     "corsheaders",
     "storages",
+    "django_filters",
 ]
 
 MIDDLEWARE = [
@@ -59,6 +60,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 50,  # You can adjust to 50 or 100 as needed
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 
 TEMPLATES = [

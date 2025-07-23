@@ -209,3 +209,28 @@ class Profile(models.Model):
             zipcode="",  # Required field, set to empty string
             resume=None,  # Remove file reference from DB
         )
+
+class Job(models.Model):
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    church = models.ForeignKey("Church", on_delete=models.CASCADE, related_name="jobs")
+    title = models.CharField(max_length=255)
+    ministry_type = models.CharField(max_length=100)
+    employment_type = models.CharField(max_length=100)
+    job_description = models.TextField()
+    about_church = models.TextField()
+    job_url_link = models.URLField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} at {self.church.name}"

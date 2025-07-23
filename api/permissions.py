@@ -15,3 +15,7 @@ class IsInAnyGroup(BasePermission):
 class IsAdminOrChurch(IsInAnyGroup):
     def __init__(self):
         super().__init__('Admin', 'Church User')
+
+class IsAdmin(IsInAnyGroup):
+    def __init__(self):
+        super().__init__('Admin')

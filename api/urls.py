@@ -14,6 +14,7 @@ from .views import (
     ProfileMeUpdateAPIView,
     ProfileResetAPIView,
     ProfileListAPIView,
+    UpdateProfileStatusView,
 )
 
 urlpatterns = [
@@ -37,4 +38,5 @@ urlpatterns = [
     path("profile/me/", ProfileMeUpdateAPIView.as_view(), name="profile-me"),
     path("profile/reset/", ProfileResetAPIView.as_view(), name="profile-reset"),
     path('profiles/', ProfileListAPIView.as_view(), name='profile-list'),
+    path('profiles/<int:pk>/status/', UpdateProfileStatusView.as_view(), name='update-profile-status'),
 ]

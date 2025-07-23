@@ -5,37 +5,63 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0005_alter_profile_city_alter_profile_state_and_more'),
+        ("api", "0005_alter_profile_city_alter_profile_state_and_more"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='invitecode',
-            options={'ordering': ['-created_at']},
+            name="invitecode",
+            options={"ordering": ["-created_at"]},
         ),
         migrations.AlterModelOptions(
-            name='profile',
-            options={'ordering': ['-created_at']},
+            name="profile",
+            options={"ordering": ["-created_at"]},
         ),
         migrations.CreateModel(
-            name='Job',
+            name="Job",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=255)),
-                ('ministry_type', models.CharField(max_length=100)),
-                ('employment_type', models.CharField(max_length=100)),
-                ('job_description', models.TextField()),
-                ('about_church', models.TextField()),
-                ('job_url_link', models.URLField(blank=True)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')], default='draft', max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('church', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='jobs', to='api.church')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("ministry_type", models.CharField(max_length=100)),
+                ("employment_type", models.CharField(max_length=100)),
+                ("job_description", models.TextField()),
+                ("about_church", models.TextField()),
+                ("job_url_link", models.URLField(blank=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Draft"),
+                            ("pending", "Pending"),
+                            ("approved", "Approved"),
+                            ("rejected", "Rejected"),
+                        ],
+                        default="draft",
+                        max_length=20,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "church",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="jobs",
+                        to="api.church",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

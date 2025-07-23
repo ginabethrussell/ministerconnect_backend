@@ -1,13 +1,16 @@
 from rest_framework import generics, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateAPIView
-from .models import Church, InviteCode, Job, Profile
+from .models import Church, InviteCode, Job, Profile, MutualInterest
 from django.contrib.auth import get_user_model
-from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+
 from .serializers import (
     ChurchSerializer,
     JobSerializer,
@@ -18,7 +21,8 @@ from .serializers import (
     ResetPasswordSerializer,
     ProfileSerializer,
     ProfileResetSerializer,
-    ProfileStatusSerializer
+    ProfileStatusSerializer,
+    MutualInterestSerializer,
 )
 from rest_framework.views import APIView
 from .permissions import IsAdmin, IsAdminOrChurch
@@ -105,7 +109,7 @@ class ProfileListAPIView(APIView):
     permission_classes = [IsAuthenticated, IsAdminOrChurch]
 
     def get(self, request):
-        status_param = request.query_params.get('status')
+        status_param = request.query_params.get("status")
 
         profiles = Profile.objects.select_related("user").all()
 
@@ -116,7 +120,7 @@ class ProfileListAPIView(APIView):
         page = paginator.paginate_queryset(profiles, request)
         serializer = ProfileSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
-    
+
 
 class ProfileMeAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -172,6 +176,7 @@ class ProfileResetAPIView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+
 class UpdateProfileStatusView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
@@ -183,9 +188,104 @@ class UpdateProfileStatusView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
-    permission_classes = [IsAuthenticated] 
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['status', 'church', 'ministry_type', 'employment_type']  
+    filterset_fields = ["status", "church", "ministry_type", "employment_type"]
+
+
+class MutualInterestViewSet(viewsets.ModelViewSet):
+    queryset = MutualInterest.objects.all()
+    serializer_class = MutualInterestSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["job_listing", "profile", "expressed_by"]
+
+    def get_queryset(self):
+        return MutualInterest.objects.filter(expressed_by_user=self.request.user)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="matches",
+        permission_classes=[IsAuthenticated],
+    )
+    def mutual_matches(self, request):
+        user = request.user
+
+        if not user.church_id:
+            return Response([], status=403)
+
+        # Optional filter by job_listing
+        job_filter = request.query_params.get("job_listing")
+
+        # Get all jobs tied to this user's church
+        job_ids = user.church_id.jobs.values_list("id", flat=True)
+
+        if job_filter:
+            try:
+                job_filter = int(job_filter)
+            except ValueError:
+                return Response({"detail": "Invalid job_listing ID."}, status=400)
+            if job_filter not in job_ids:
+                return Response(
+                    {"detail": "Job not found or not associated with your church."},
+                    status=404,
+                )
+            job_ids = [job_filter]
+
+        # Find (job, profile) pairs with 2 interest expressions (candidate + church)
+        mutual_pairs = (
+            MutualInterest.objects.filter(job_listing_id__in=job_ids)
+            .values("job_listing_id", "profile_id")
+            .annotate(match_count=Count("id"))
+            .filter(match_count=2)
+        )
+
+        matches = [
+            (pair["job_listing_id"], pair["profile_id"]) for pair in mutual_pairs
+        ]
+
+        # Return only church expressions from this user for mutual matches
+        mutual_qs = MutualInterest.objects.filter(
+            expressed_by="church",
+            job_listing_id__in=[j for j, _ in matches],
+            profile_id__in=[p for _, p in matches],
+            expressed_by_user=user,
+        ).select_related("job_listing", "profile")
+
+        serializer = self.get_serializer(mutual_qs, many=True)
+        return Response(serializer.data)
+
+    from rest_framework.permissions import IsAdminUser
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="admin-matches",
+        permission_classes=[IsAuthenticated, IsAdmin],
+    )
+    def admin_matches(self, request):
+        # Find all (job, profile) pairs that have both candidate + church expressions
+        mutual_pairs = (
+            MutualInterest.objects.values("job_listing_id", "profile_id")
+            .annotate(match_count=Count("id"))
+            .filter(match_count=2)
+        )
+
+        matches = [
+            (pair["job_listing_id"], pair["profile_id"]) for pair in mutual_pairs
+        ]
+
+        # Return the church-side expression for each match
+        mutual_qs = MutualInterest.objects.filter(
+            expressed_by="church",
+            job_listing_id__in=[j for j, _ in matches],
+            profile_id__in=[p for _, p in matches],
+        ).select_related("job_listing", "profile", "expressed_by_user")
+
+        serializer = self.get_serializer(mutual_qs, many=True)
+        return Response(serializer.data)

@@ -17,10 +17,13 @@ from .views import (
     ProfileListAPIView,
     UpdateProfileStatusView,
     JobViewSet,
+    MutualInterestViewSet,
 )
 
 router = DefaultRouter()
-router.register(r'jobs', JobViewSet, basename='job')
+router.register(r"jobs", JobViewSet, basename="job")
+router.register(r"mutual-interests", MutualInterestViewSet, basename="mutual-interest")
+
 
 urlpatterns = [
     path("churches/create/", ChurchCreateAPIView.as_view(), name="church-create"),
@@ -42,7 +45,11 @@ urlpatterns = [
     path("reset-password/", ResetPasswordAPIView.as_view(), name="reset-password"),
     path("profile/me/", ProfileMeUpdateAPIView.as_view(), name="profile-me"),
     path("profile/reset/", ProfileResetAPIView.as_view(), name="profile-reset"),
-    path('profiles/', ProfileListAPIView.as_view(), name='profile-list'),
-    path('profiles/<int:pk>/review/', UpdateProfileStatusView.as_view(), name='update-profile-status'),
-    path('', include(router.urls)),
+    path("profiles/", ProfileListAPIView.as_view(), name="profile-list"),
+    path(
+        "profiles/<int:pk>/review/",
+        UpdateProfileStatusView.as_view(),
+        name="update-profile-status",
+    ),
+    path("", include(router.urls)),
 ]

@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission
 
+
 class IsInAnyGroup(BasePermission):
     def __init__(self, *group_names):
         self.group_names = group_names
@@ -12,10 +13,12 @@ class IsInAnyGroup(BasePermission):
             and user.groups.filter(name__in=self.group_names).exists()
         )
 
+
 class IsAdminOrChurch(IsInAnyGroup):
     def __init__(self):
-        super().__init__('Admin', 'Church User')
+        super().__init__("Admin", "Church User")
+
 
 class IsAdmin(IsInAnyGroup):
     def __init__(self):
-        super().__init__('Admin')
+        super().__init__("Admin")

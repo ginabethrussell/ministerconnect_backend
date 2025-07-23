@@ -84,3 +84,35 @@ class ChurchAPITests(TestCase):
         response = self.client.post("/api/churches/create/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Enter a valid US ZIP code.", str(response.data))
+
+    def test_atomic_rollback_on_invalid_user(self):
+        """Church and all users should rollback if any user is invalid"""
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
+
+        payload = self.valid_payload.copy()
+        payload["users"] = [
+            {
+                "email": "validuser@church.org",
+                "first_name": "Valid",
+                "last_name": "User",
+                "password": "Password123!",
+                "groups": ["Admin"],
+                "status": "active",
+                "requires_password_change": False
+            },
+            {
+                "email": "",  # Invalid: required field
+                "first_name": "Missing",
+                "last_name": "Email",
+                "password": "Password123!",
+                "groups": ["Member"],
+                "status": "active",
+                "requires_password_change": False
+            }
+        ]
+        response = self.client.post("/api/churches/create/", payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", response.data["users"][1])
+        self.assertEqual(Church.objects.count(), 0)
+        self.assertFalse(User.objects.filter(email="validuser@church.org").exists())

@@ -7,6 +7,7 @@ from api.models import Church, Job
 
 User = get_user_model()
 
+
 class JobViewSetTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -21,7 +22,7 @@ class JobViewSetTests(TestCase):
             city="Lexington",
             state="KY",
             zipcode="40502",
-            status="active"
+            status="active",
         )
 
         # Create a user and link to church
@@ -31,7 +32,7 @@ class JobViewSetTests(TestCase):
             password="securepassword",
             name="Church Staff",
             status="active",
-            church_id=self.church
+            church_id=self.church,
         )
 
         # Auth token
@@ -48,7 +49,7 @@ class JobViewSetTests(TestCase):
             job_description="Lead our youth ministry...",
             about_church="Grace Fellowship is a vibrant church...",
             job_url_link="https://jobs.efca.org/jobs/1129",
-            status="pending"
+            status="pending",
         )
 
     def test_list_jobs(self):
@@ -73,7 +74,7 @@ class JobViewSetTests(TestCase):
             "job_description": "Assist lead pastor with adult ministries...",
             "about_church": "We are a church in growth mode...",
             "job_url_link": "https://example.com/job",
-            "status": "pending"
+            "status": "pending",
         }
         response = self.client.post("/api/jobs/", job_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -82,9 +83,7 @@ class JobViewSetTests(TestCase):
     def test_update_job(self):
         """PATCH /api/jobs/<id>/ should update fields"""
         response = self.client.patch(
-            f"/api/jobs/{self.job.id}/",
-            {"status": "approved"},
-            format="json"
+            f"/api/jobs/{self.job.id}/", {"status": "approved"}, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.job.refresh_from_db()
@@ -106,7 +105,7 @@ class JobViewSetTests(TestCase):
             job_description="Lead music and worship...",
             about_church="We value vibrant worship...",
             job_url_link="https://example.com/worship",
-            status="approved"
+            status="approved",
         )
 
         response = self.client.get("/api/jobs/?status=pending")
@@ -126,7 +125,7 @@ class JobViewSetTests(TestCase):
             city="Louisville",
             state="KY",
             zipcode="40202",
-            status="active"
+            status="active",
         )
 
         Job.objects.create(
@@ -137,7 +136,7 @@ class JobViewSetTests(TestCase):
             job_description="Lead teaching ministry...",
             about_church="Bible-centered teaching church...",
             job_url_link="https://example.com/teach",
-            status="pending"
+            status="pending",
         )
 
         response = self.client.get(f"/api/jobs/?church={self.church.id}")

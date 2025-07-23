@@ -98,7 +98,7 @@ class ChurchAPITests(TestCase):
                 "password": "Password123!",
                 "groups": ["Admin"],
                 "status": "active",
-                "requires_password_change": False
+                "requires_password_change": False,
             },
             {
                 "email": "",  # Invalid: required field
@@ -107,8 +107,8 @@ class ChurchAPITests(TestCase):
                 "password": "Password123!",
                 "groups": ["Member"],
                 "status": "active",
-                "requires_password_change": False
-            }
+                "requires_password_change": False,
+            },
         ]
         response = self.client.post("/api/churches/create/", payload, format="json")
 

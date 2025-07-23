@@ -141,7 +141,7 @@ class InviteCode(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.code} ({self.event})"
@@ -179,7 +179,7 @@ class Profile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.user.email})"
@@ -210,6 +210,7 @@ class Profile(models.Model):
             resume=None,  # Remove file reference from DB
         )
 
+
 class Job(models.Model):
     STATUS_CHOICES = [
         ("draft", "Draft"),
@@ -230,7 +231,53 @@ class Job(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.title} at {self.church.name}"
+
+
+class MutualInterest(models.Model):
+    EXPRESSOR_CHOICES = [
+        ("candidate", "Candidate"),
+        ("church", "Church"),
+    ]
+
+    job_listing = models.ForeignKey(
+        "Job", on_delete=models.CASCADE, related_name="mutual_interests"
+    )
+    profile = models.ForeignKey(
+        "Profile", on_delete=models.CASCADE, related_name="mutual_interests"
+    )
+    expressed_by = models.CharField(max_length=10, choices=EXPRESSOR_CHOICES)
+    expressed_by_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expressed_mutual_interests",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["job_listing", "profile", "expressed_by"],
+                name="unique_interest_per_side",
+            )
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.expressed_by.title()} → Profile {self.profile_id} / Job {self.job_listing_id}"
+
+    @property
+    def is_mutual(self):
+        """Return True if both candidate and church have expressed interest for the same job/profile pair."""
+        return (
+            MutualInterest.objects.filter(
+                job_listing=self.job_listing, profile=self.profile
+            ).count()
+            == 2
+        )

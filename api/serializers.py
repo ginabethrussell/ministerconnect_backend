@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import transaction
 from rest_framework import serializers
-from .models import Church, US_STATE_CHOICES, InviteCode, Profile, Job
+from .models import Church, US_STATE_CHOICES, InviteCode, MutualInterest, Profile, Job
 
 User = get_user_model()
 
@@ -112,7 +112,7 @@ class ChurchSerializer(serializers.ModelSerializer):
 
         with transaction.atomic():
             church = super().create(validated_data)
-            
+
             for user_data in users_data:
                 user_data["church_id"] = church  # assign church foreign key
                 serializer = UserCreateSerializer(data=user_data)
@@ -316,13 +316,62 @@ class ProfileResetSerializer(serializers.Serializer):
         invite_code = user.invite_code
         return Profile.reset_to_draft(user, invite_code)
 
+
 class ProfileStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['id','status']
-        read_only_fields = ['id']
+        fields = ["id", "status"]
+        read_only_fields = ["id"]
+
 
 class JobSerializer(serializers.ModelSerializer):
     class Meta:
         model = Job
-        fields = '__all__'
+        fields = "__all__"
+
+
+class MutualInterestSerializer(serializers.ModelSerializer):
+    is_mutual = serializers.SerializerMethodField()
+    church_name = serializers.SerializerMethodField()
+    job_title = serializers.CharField(source="job_listing.title", read_only=True)
+    candidate_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MutualInterest
+        fields = [
+            "id",
+            "job_listing",
+            "job_title",
+            "church_name",
+            "profile",
+            "candidate_name",
+            "expressed_by",
+            "expressed_by_user",
+            "created_at",
+            "updated_at",
+            "is_mutual",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "expressed_by_user",
+            "is_mutual",
+        ]
+
+    def get_is_mutual(self, obj):
+        return obj.is_mutual
+
+    def create(self, validated_data):
+        validated_data["expressed_by_user"] = self.context["request"].user
+        return super().create(validated_data)
+
+    def get_church_name(self, obj):
+        return (
+            obj.job_listing.church.name
+            if obj.job_listing and obj.job_listing.church
+            else None
+        )
+
+    def get_candidate_name(self, obj):
+        return obj.profile.user.name if obj.profile and obj.profile.user else None

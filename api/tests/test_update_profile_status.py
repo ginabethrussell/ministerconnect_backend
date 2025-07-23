@@ -8,6 +8,7 @@ from api.models import Profile, InviteCode
 
 User = get_user_model()
 
+
 class UpdateProfileStatusAPITests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -55,7 +56,7 @@ class UpdateProfileStatusAPITests(TestCase):
         refresh = RefreshToken.for_user(self.user)
         self.access_token = str(refresh.access_token)
 
-       # Authorized admin user
+        # Authorized admin user
         self.admin_user = User.objects.create_user(
             email="admin@example.com",
             username="admin@example.com",
@@ -69,13 +70,17 @@ class UpdateProfileStatusAPITests(TestCase):
 
     def test_update_status_requires_authentication(self):
         """Unauthenticated users cannot update profile status."""
-        response = self.client.patch(f"/api/profiles/{self.profile.id}/review/", {"status": "approved"})
+        response = self.client.patch(
+            f"/api/profiles/{self.profile.id}/review/", {"status": "approved"}
+        )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_update_status_success(self):
         """Authenticated Admin user can update profile status."""
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
-        response = self.client.patch(f"/api/profiles/{self.profile.id}/review/", {"status": "approved"})
+        response = self.client.patch(
+            f"/api/profiles/{self.profile.id}/review/", {"status": "approved"}
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.profile.refresh_from_db()
@@ -85,7 +90,9 @@ class UpdateProfileStatusAPITests(TestCase):
     def test_update_status_invalid_value(self):
         """Invalid status value returns 400."""
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
-        response = self.client.patch(f"/api/profiles/{self.profile.id}/review/", {"status": "not_a_valid_status"})
+        response = self.client.patch(
+            f"/api/profiles/{self.profile.id}/review/", {"status": "not_a_valid_status"}
+        )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("status", response.data)
@@ -94,7 +101,9 @@ class UpdateProfileStatusAPITests(TestCase):
         """Ensure only the status field is modified."""
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
         original_address = self.profile.street_address
-        response = self.client.patch(f"/api/profiles/{self.profile.id}/review/", {"status": "rejected"})
+        response = self.client.patch(
+            f"/api/profiles/{self.profile.id}/review/", {"status": "rejected"}
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -105,5 +114,7 @@ class UpdateProfileStatusAPITests(TestCase):
     def test_update_status_invalid_profile_id(self):
         """Returns 404 for non-existent profile."""
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
-        response = self.client.patch("/api/profiles/9999/review/", {"status": "approved"})
+        response = self.client.patch(
+            "/api/profiles/9999/review/", {"status": "approved"}
+        )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

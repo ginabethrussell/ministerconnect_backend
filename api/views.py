@@ -189,4 +189,3 @@ class JobViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated] 
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'church', 'ministry_type', 'employment_type']  
- 

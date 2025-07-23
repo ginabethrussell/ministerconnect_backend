@@ -140,6 +140,9 @@ class InviteCode(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
         return f"{self.code} ({self.event})"
 
@@ -151,10 +154,11 @@ class Profile(models.Model):
     invite_code = models.ForeignKey(
         "InviteCode", on_delete=models.SET_NULL, null=True, blank=True
     )
-    street_address = models.CharField(max_length=255)
-    city = models.CharField(max_length=100)
-    state = models.CharField(max_length=2)
-    zipcode = models.CharField(max_length=10)
+    street_address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=2, blank=True)
+    zipcode = models.CharField(max_length=10, blank=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
     status = models.CharField(
         max_length=20,
         choices=[
@@ -174,5 +178,34 @@ class Profile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.user.email})"
+
+    @classmethod
+    def reset_to_draft(cls, user, invite_code):
+        """
+        Reset a user's profile to initial draft state.
+        Deletes existing profile and its resume file, then creates a fresh one with only basic fields.
+        """
+        # Delete existing profile and its resume file if it exists
+        existing = cls.objects.filter(user=user)
+        if existing.exists():
+            old_profile = existing.first()
+            if old_profile.resume:
+                old_profile.resume.delete(save=False)
+            old_profile.delete()
+
+        # Create fresh profile with initial state
+        return cls.objects.create(
+            user=user,
+            invite_code=invite_code,
+            status="draft",
+            street_address="",  # Required field, set to empty string
+            city="",  # Required field, set to empty string
+            state="",  # Required field, set to empty string
+            zipcode="",  # Required field, set to empty string
+            resume=None,  # Remove file reference from DB
+        )

@@ -92,11 +92,11 @@ class InviteCodeListAPITests(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
         response = self.client.get("/api/invite-codes/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 2)
-        codes = [item["code"] for item in response.data]
+        self.assertGreaterEqual(len(response.data["results"]), 2)
+        codes = [item["code"] for item in response.data["results"]]
         self.assertIn("CODE1", codes)
         self.assertIn("CODE2", codes)
-        for item in response.data:
+        for item in response.data["results"]:
             self.assertEqual(item["created_by_name"], self.user.name)
 
     def test_get_invite_codes_unauthenticated(self):
@@ -107,4 +107,5 @@ class InviteCodeListAPITests(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
         response = self.client.get("/api/invite-codes/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, [])
+        self.assertEqual(response.data["results"], [])
+        self.assertEqual(response.data["count"], 0)

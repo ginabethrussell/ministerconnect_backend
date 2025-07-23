@@ -62,10 +62,23 @@ class ProfileMeAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_profile_me_status(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
-        response = self.client.patch(
-            "/api/profile/me/", {"status": "pending"}, format="json"
+        pdf_content = b"%PDF-1.4 test pdf content"
+        pdf_file = SimpleUploadedFile(
+            "test_resume.pdf", pdf_content, content_type="application/pdf"
         )
+        data = {
+            "status": "pending",
+            "phone": "+15551234567",
+            "street_address": "123 Main St",
+            "city": "Lexington",
+            "state": "KY",
+            "zipcode": "40502",
+            "resume": pdf_file,
+        }
+        response = self.client.patch("/api/profile/me/", data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], "pending")
 

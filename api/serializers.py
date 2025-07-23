@@ -300,3 +300,9 @@ class ProfileResetSerializer(serializers.Serializer):
         user = self.context["request"].user
         invite_code = user.invite_code
         return Profile.reset_to_draft(user, invite_code)
+
+class ProfileStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['id','status']
+        read_only_fields = ['id']

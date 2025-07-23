@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateAPIView
 from .models import Church, InviteCode, Profile
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from .serializers import (
     ChurchSerializer,
     UserCreateSerializer,
@@ -15,9 +16,10 @@ from .serializers import (
     ResetPasswordSerializer,
     ProfileSerializer,
     ProfileResetSerializer,
+    ProfileStatusSerializer
 )
 from rest_framework.views import APIView
-from .permissions import IsAdminOrChurch
+from .permissions import IsAdmin, IsAdminOrChurch
 
 
 User = get_user_model()
@@ -167,3 +169,14 @@ class ProfileResetAPIView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+
+class UpdateProfileStatusView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def patch(self, request, pk):
+        profile = get_object_or_404(Profile, pk=pk)
+        serializer = ProfileStatusSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

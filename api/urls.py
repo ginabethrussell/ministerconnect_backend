@@ -1,4 +1,5 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -15,7 +16,11 @@ from .views import (
     ProfileResetAPIView,
     ProfileListAPIView,
     UpdateProfileStatusView,
+    JobViewSet,
 )
+
+router = DefaultRouter()
+router.register(r'jobs', JobViewSet, basename='job')
 
 urlpatterns = [
     path("churches/create/", ChurchCreateAPIView.as_view(), name="church-create"),
@@ -38,5 +43,6 @@ urlpatterns = [
     path("profile/me/", ProfileMeUpdateAPIView.as_view(), name="profile-me"),
     path("profile/reset/", ProfileResetAPIView.as_view(), name="profile-reset"),
     path('profiles/', ProfileListAPIView.as_view(), name='profile-list'),
-    path('profiles/<int:pk>/status/', UpdateProfileStatusView.as_view(), name='update-profile-status'),
+    path('profiles/<int:pk>/review/', UpdateProfileStatusView.as_view(), name='update-profile-status'),
+    path('', include(router.urls)),
 ]

@@ -37,10 +37,18 @@ class UserCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
 
-class ChurchCreateAPIView(generics.CreateAPIView):
+class ChurchViewSet(viewsets.ModelViewSet):
     queryset = Church.objects.all()
     serializer_class = ChurchSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get_queryset(self):
+        # Customize this if you want to filter by current user’s church only, etc.
+        return Church.objects.all()
+
+    def perform_create(self, serializer):
+        # Customize if you want to set a user or other logic
+        serializer.save()
 
 
 class InviteCodeCreateAPIView(generics.CreateAPIView):

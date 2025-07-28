@@ -5,9 +5,9 @@ from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
 
 if settings.DEBUG:
-    resume_storage = None  # Use default (local)
+    file_storage = None  # Use default (local)
 else:
-    resume_storage = S3Boto3Storage()
+    file_storage = S3Boto3Storage()
 
 
 US_STATE_CHOICES = [
@@ -170,7 +170,10 @@ class Profile(models.Model):
         default="draft",
     )
     resume = models.FileField(
-        upload_to="resumes/", storage=resume_storage, null=True, blank=True
+        upload_to="resumes/", storage=file_storage, null=True, blank=True
+    )
+    profile_image = models.ImageField(
+        upload_to="profile-images/", storage=file_storage, null=True, blank=True
     )
     video_url = models.URLField(null=True, blank=True)
     placement_preferences = models.JSONField(default=list, blank=True)
@@ -190,12 +193,14 @@ class Profile(models.Model):
         Reset a user's profile to initial draft state.
         Deletes existing profile and its resume file, then creates a fresh one with only basic fields.
         """
-        # Delete existing profile and its resume file if it exists
+        # Delete existing profile and its resume file and profile image files if they exist
         existing = cls.objects.filter(user=user)
         if existing.exists():
             old_profile = existing.first()
             if old_profile.resume:
                 old_profile.resume.delete(save=False)
+            if old_profile.profile_image:
+                old_profile.profile_image.delete(save=False)
             old_profile.delete()
 
         # Create fresh profile with initial state

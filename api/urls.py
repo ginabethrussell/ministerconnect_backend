@@ -23,7 +23,7 @@ from .views import (
 router = DefaultRouter()
 router.register(r"jobs", JobViewSet, basename="job")
 router.register(r"mutual-interests", MutualInterestViewSet, basename="mutual-interest")
-router.register(r'churches', ChurchViewSet, basename='church')
+router.register(r"churches", ChurchViewSet, basename="church")
 
 
 urlpatterns = [

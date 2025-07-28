@@ -5,6 +5,7 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from api.models import Church
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -22,6 +23,10 @@ class AuthenticatedEndpointTests(TestCase):
             name="Auth User",
             status="active",
         )
+         # Add the user to the Admin group
+        admin_group = Group.objects.get_or_create(name="Admin")[0]
+        self.user.groups.set([admin_group])
+        
         self.church = Church.objects.create(
             name="Auth Church",
             email="auth@church.com",
@@ -51,7 +56,7 @@ class AuthenticatedEndpointTests(TestCase):
     def test_protected_endpoint_requires_auth(self):
         # Try without authentication
         response = self.client.post(
-            "/api/churches/create/", self.church_payload, format="json"
+            "/api/churches/", self.church_payload, format="json"
         )
         self.assertEqual(response.status_code, 401)  # Unauthorized
 
@@ -59,7 +64,7 @@ class AuthenticatedEndpointTests(TestCase):
         # Set the Authorization header
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
         response = self.client.post(
-            "/api/churches/create/", self.church_payload, format="json"
+            "/api/churches/", self.church_payload, format="json"
         )
         self.assertIn(response.status_code, [200, 201])  # Created or OK
 

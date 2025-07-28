@@ -45,9 +45,7 @@ class ChurchAPITests(TestCase):
 
     def test_create_church_success(self):
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
-        response = self.client.post(
-            "/api/churches/", self.valid_payload, format="json"
-        )
+        response = self.client.post("/api/churches/", self.valid_payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Church.objects.count(), 1)
         self.assertEqual(Church.objects.get().name, "Test Church")
@@ -57,9 +55,7 @@ class ChurchAPITests(TestCase):
         # Create the first church
         self.client.post("/api/churches/", self.valid_payload, format="json")
         # Try to create a duplicate
-        response = self.client.post(
-            "/api/churches/", self.valid_payload, format="json"
-        )
+        response = self.client.post("/api/churches/", self.valid_payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
             "A church with this name, city, and state already exists.",

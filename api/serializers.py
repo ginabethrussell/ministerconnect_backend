@@ -309,7 +309,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         new_resume = validated_data.get("resume", None)
         if new_resume and instance.resume and instance.resume != new_resume:
             instance.resume.delete(save=False)  # delete old resume from S3
-    
+
         return super().update(instance, validated_data)
 
 
@@ -332,7 +332,21 @@ class ProfileStatusSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class ChurchInlineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Church
+        fields = [
+            "id",
+            "name",
+            "website",
+            "city",
+            "state",
+        ]
+
+
 class JobSerializer(serializers.ModelSerializer):
+    church = ChurchInlineSerializer(read_only=True)
+
     class Meta:
         model = Job
         fields = "__all__"

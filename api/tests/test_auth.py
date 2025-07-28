@@ -23,10 +23,10 @@ class AuthenticatedEndpointTests(TestCase):
             name="Auth User",
             status="active",
         )
-         # Add the user to the Admin group
+        # Add the user to the Admin group
         admin_group = Group.objects.get_or_create(name="Admin")[0]
         self.user.groups.set([admin_group])
-        
+
         self.church = Church.objects.create(
             name="Auth Church",
             email="auth@church.com",

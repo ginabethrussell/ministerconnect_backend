@@ -302,6 +302,14 @@ class ProfileSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
+        new_image = validated_data.get("profile_image", None)
+        if new_image and instance.profile_image and instance.profile_image != new_image:
+            instance.profile_image.delete(save=False)  # delete old image from S3
+
+        new_resume = validated_data.get("resume", None)
+        if new_resume and instance.resume and instance.resume != new_resume:
+            instance.resume.delete(save=False)  # delete old resume from S3
+    
         return super().update(instance, validated_data)
 
 

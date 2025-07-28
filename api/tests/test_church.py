@@ -6,6 +6,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from api.models import Church
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -15,6 +16,7 @@ User = get_user_model()
 class ChurchAPITests(TestCase):
     def setUp(self):
         self.client = APIClient()
+
         self.valid_payload = {
             "name": "Test Church",
             "email": "test@church.com",
@@ -26,7 +28,7 @@ class ChurchAPITests(TestCase):
             "zipcode": "90210",
             "status": "active",
         }
-        # Create a user and get a token
+        # Create the test user
         self.user = User.objects.create_user(
             email="authuser@church.org",
             username="authuser@church.org",
@@ -34,6 +36,9 @@ class ChurchAPITests(TestCase):
             name="Auth User",
             status="active",
         )
+        # Add the user to the Admin group
+        admin_group = Group.objects.get_or_create(name="Admin")[0]
+        self.user.groups.set([admin_group])
         # Get JWT token for the user
         refresh = RefreshToken.for_user(self.user)
         self.access_token = str(refresh.access_token)
@@ -41,7 +46,7 @@ class ChurchAPITests(TestCase):
     def test_create_church_success(self):
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
         response = self.client.post(
-            "/api/churches/create/", self.valid_payload, format="json"
+            "/api/churches/", self.valid_payload, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Church.objects.count(), 1)
@@ -50,10 +55,10 @@ class ChurchAPITests(TestCase):
     def test_create_duplicate_church(self):
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
         # Create the first church
-        self.client.post("/api/churches/create/", self.valid_payload, format="json")
+        self.client.post("/api/churches/", self.valid_payload, format="json")
         # Try to create a duplicate
         response = self.client.post(
-            "/api/churches/create/", self.valid_payload, format="json"
+            "/api/churches/", self.valid_payload, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
@@ -65,7 +70,7 @@ class ChurchAPITests(TestCase):
         payload = self.valid_payload.copy()
         payload["state"] = "California"
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
-        response = self.client.post("/api/churches/create/", payload, format="json")
+        response = self.client.post("/api/churches/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("is not a valid choice", str(response.data))
 
@@ -73,7 +78,7 @@ class ChurchAPITests(TestCase):
         payload = self.valid_payload.copy()
         payload["phone"] = "123"
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
-        response = self.client.post("/api/churches/create/", payload, format="json")
+        response = self.client.post("/api/churches/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Enter a valid phone number.", str(response.data))
 
@@ -81,7 +86,7 @@ class ChurchAPITests(TestCase):
         payload = self.valid_payload.copy()
         payload["zipcode"] = "abcde"
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
-        response = self.client.post("/api/churches/create/", payload, format="json")
+        response = self.client.post("/api/churches/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Enter a valid US ZIP code.", str(response.data))
 
@@ -110,7 +115,7 @@ class ChurchAPITests(TestCase):
                 "requires_password_change": False,
             },
         ]
-        response = self.client.post("/api/churches/create/", payload, format="json")
+        response = self.client.post("/api/churches/", payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data["users"][1])

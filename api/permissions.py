@@ -26,4 +26,4 @@ class IsAdmin(IsInAnyGroup):
 
 class IsChurchUser(IsInAnyGroup):
     def __init__(self):
-        super().__init__("Admin")
+        super().__init__("Church User")

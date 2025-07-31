@@ -215,6 +215,15 @@ class JobViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["status", "church", "ministry_type", "employment_type"]
 
+    @action(detail=False, methods=["get"], url_path="my-jobs", permission_classes=[IsAuthenticated, IsChurchUser])
+    def my_jobs(self, request):
+        church_id = request.user.church_id.pk  # or request.user.church_id.pk
+        if not church_id:
+            return Response({"detail": "You are not associated with a church."}, status=403)
+        jobs = Job.objects.filter(church_id=church_id)
+        serializer = self.get_serializer(jobs, many=True)
+        return Response(serializer.data)
+
 
 class MutualInterestViewSet(viewsets.ModelViewSet):
     queryset = MutualInterest.objects.all()

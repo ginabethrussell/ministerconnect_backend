@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateAPIView
 from .models import Church, InviteCode, Job, Profile, MutualInterest
+from .permissions import IsChurchUser
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
@@ -49,6 +50,16 @@ class ChurchViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Customize if you want to set a user or other logic
         serializer.save()
+
+
+class ApprovedCandidateViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated, IsChurchUser]
+
+    def get_queryset(self):
+        return Profile.objects.select_related("user").filter(
+            status="approved", user__is_active=True
+        )
 
 
 class InviteCodeCreateAPIView(generics.CreateAPIView):

@@ -260,8 +260,15 @@ class UserMeSerializer(serializers.ModelSerializer):
         return obj.invite_code.code if obj.invite_code else None
 
 
+class UserSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "last_name", "email"]
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     invite_code_string = serializers.SerializerMethodField(read_only=True)
+    user = UserSummarySerializer(read_only=True)
 
     class Meta:
         model = Profile

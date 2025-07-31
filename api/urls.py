@@ -18,12 +18,16 @@ from .views import (
     UpdateProfileStatusView,
     JobViewSet,
     MutualInterestViewSet,
+    ApprovedCandidateViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"jobs", JobViewSet, basename="job")
 router.register(r"mutual-interests", MutualInterestViewSet, basename="mutual-interest")
 router.register(r"churches", ChurchViewSet, basename="church")
+router.register(
+    r"approved-candidates", ApprovedCandidateViewSet, basename="approved-candidates"
+)
 
 
 urlpatterns = [

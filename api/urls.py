@@ -16,6 +16,7 @@ from .views import (
     ProfileResetAPIView,
     ProfileListAPIView,
     UpdateProfileStatusView,
+    UpdateJobStatusView,
     JobViewSet,
     MutualInterestViewSet,
     ApprovedCandidateViewSet,
@@ -54,6 +55,11 @@ urlpatterns = [
         "profiles/<int:pk>/review/",
         UpdateProfileStatusView.as_view(),
         name="update-profile-status",
+    ),
+    path(
+        "jobs/<int:pk>/review/",
+        UpdateJobStatusView.as_view(),
+        name="update-job-status",
     ),
     path("", include(router.urls)),
 ]

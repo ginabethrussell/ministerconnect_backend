@@ -358,6 +358,17 @@ class JobSerializer(serializers.ModelSerializer):
         model = Job
         fields = "__all__"
 
+    def create(self, validated_data):
+        validated_data["status"] = "pending"  # force pending on create
+        return super().create(validated_data)
+
+
+class JobStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Job
+        fields = ["id", "status"]
+        read_only_fields = ["id"]
+
 
 class MutualInterestSerializer(serializers.ModelSerializer):
     is_mutual = serializers.SerializerMethodField()

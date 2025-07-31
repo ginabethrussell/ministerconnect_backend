@@ -15,6 +15,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import (
     ChurchSerializer,
     JobSerializer,
+    JobStatusSerializer,
     UserCreateSerializer,
     InviteCodeSerializer,
     CandidateRegistrationSerializer,
@@ -215,14 +216,50 @@ class JobViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["status", "church", "ministry_type", "employment_type"]
 
-    @action(detail=False, methods=["get"], url_path="my-jobs", permission_classes=[IsAuthenticated, IsChurchUser])
+    def perform_create(self, serializer):
+        church = self.request.user.church_id
+        serializer.save(church=church)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.user.church_id != instance.church_id:
+            return Response({"detail": "Not authorized."}, status=403)
+        return super().destroy(request, *args, **kwargs)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="my-jobs",
+        permission_classes=[IsAuthenticated, IsChurchUser],
+    )
     def my_jobs(self, request):
         church_id = request.user.church_id.pk  # or request.user.church_id.pk
         if not church_id:
-            return Response({"detail": "You are not associated with a church."}, status=403)
-        jobs = Job.objects.filter(church_id=church_id)
-        serializer = self.get_serializer(jobs, many=True)
+            return Response(
+                {"detail": "You are not associated with a church."}, status=403
+            )
+        queryset = Job.objects.filter(church_id=church_id).order_by("-created_at")
+        # Use the built-in paginator
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Fallback if pagination fails
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class UpdateJobStatusView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def patch(self, request, pk):
+        job = get_object_or_404(Job, pk=pk)
+        serializer = JobStatusSerializer(job, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MutualInterestViewSet(viewsets.ModelViewSet):
@@ -234,6 +271,29 @@ class MutualInterestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MutualInterest.objects.filter(expressed_by_user=self.request.user)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="my-church-interests",
+        permission_classes=[IsAuthenticated, IsChurchUser],
+    )
+    def my_church_interests(self, request):
+        church_id = getattr(request.user.church_id, "pk", None)
+        if not church_id:
+            return Response(
+                {"detail": "You are not associated with a church."}, status=403
+            )
+
+        job_ids = Job.objects.filter(church_id=church_id).values_list("id", flat=True)
+        interests = MutualInterest.objects.filter(job_listing_id__in=job_ids)
+
+        # Paginate
+        paginator = PageNumberPagination()
+        paginated = paginator.paginate_queryset(interests, request)
+
+        serializer = self.get_serializer(paginated, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     @action(
         detail=False,
@@ -287,8 +347,6 @@ class MutualInterestViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(mutual_qs, many=True)
         return Response(serializer.data)
-
-    from rest_framework.permissions import IsAdminUser
 
     @action(
         detail=False,

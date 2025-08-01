@@ -97,6 +97,6 @@ class ProfileAPITests(TestCase):
         self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
         self.assertEqual(profile_response.data["status"], "draft")
         self.assertEqual(
-            profile_response.data["user"],
+            profile_response.data["user"]["id"],
             User.objects.get(email="profiletest@example.com").id,
         )

@@ -16,14 +16,19 @@ from .views import (
     ProfileResetAPIView,
     ProfileListAPIView,
     UpdateProfileStatusView,
+    UpdateJobStatusView,
     JobViewSet,
     MutualInterestViewSet,
+    ApprovedCandidateViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"jobs", JobViewSet, basename="job")
 router.register(r"mutual-interests", MutualInterestViewSet, basename="mutual-interest")
 router.register(r"churches", ChurchViewSet, basename="church")
+router.register(
+    r"approved-candidates", ApprovedCandidateViewSet, basename="approved-candidates"
+)
 
 
 urlpatterns = [
@@ -50,6 +55,11 @@ urlpatterns = [
         "profiles/<int:pk>/review/",
         UpdateProfileStatusView.as_view(),
         name="update-profile-status",
+    ),
+    path(
+        "jobs/<int:pk>/review/",
+        UpdateJobStatusView.as_view(),
+        name="update-job-status",
     ),
     path("", include(router.urls)),
 ]

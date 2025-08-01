@@ -174,7 +174,7 @@ class ProfileResetAPITests(TestCase):
         profile_data = response.data["profile"]
 
         # Check that relationships are preserved
-        self.assertEqual(profile_data["user"], self.user.id)
+        self.assertEqual(profile_data["user"]["id"], self.user.id)
         self.assertEqual(profile_data["invite_code"], self.invite_code.id)
         self.assertEqual(profile_data["invite_code_string"], self.invite_code.code)
 

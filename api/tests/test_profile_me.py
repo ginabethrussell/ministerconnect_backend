@@ -52,7 +52,7 @@ class ProfileMeAPITests(TestCase):
         response = self.client.get("/api/profile/me/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.profile.id)
-        self.assertEqual(response.data["user"], self.user.id)
+        self.assertEqual(response.data["user"]["id"], self.user.id)
         self.assertEqual(response.data["invite_code"], self.invite_code.id)
         self.assertEqual(response.data["status"], "draft")
 

@@ -2,6 +2,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from rest_framework_simplejwt.tokens import RefreshToken
 from api.models import Church, Job
 
@@ -34,6 +35,10 @@ class JobViewSetTests(TestCase):
             status="active",
             church_id=self.church,
         )
+
+        # Add the user to the Church User group
+        church_group = Group.objects.get_or_create(name="Church User")[0]
+        self.user.groups.set([church_group])
 
         # Auth token
         refresh = RefreshToken.for_user(self.user)
@@ -142,4 +147,4 @@ class JobViewSetTests(TestCase):
         response = self.client.get(f"/api/jobs/?church={self.church.id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         for job in response.data["results"]:
-            self.assertEqual(job["church"], self.church.id)
+            self.assertEqual(job["church"]["id"], self.church.id)

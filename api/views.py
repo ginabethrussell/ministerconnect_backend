@@ -5,8 +5,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.views import APIView
 from .models import Church, InviteCode, Job, Profile, MutualInterest
-from .permissions import IsChurchUser
+from .permissions import IsChurchUser, IsAdmin, IsAdminOrChurch
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
@@ -26,9 +27,6 @@ from .serializers import (
     ProfileStatusSerializer,
     MutualInterestSerializer,
 )
-from rest_framework.views import APIView
-from .permissions import IsAdmin, IsAdminOrChurch
-
 
 User = get_user_model()
 
@@ -42,14 +40,13 @@ class UserCreateAPIView(generics.CreateAPIView):
 class ChurchViewSet(viewsets.ModelViewSet):
     queryset = Church.objects.all()
     serializer_class = ChurchSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdminOrChurch]
 
     def get_queryset(self):
         # Customize this if you want to filter by current user’s church only, etc.
         return Church.objects.all()
 
     def perform_create(self, serializer):
-        # Customize if you want to set a user or other logic
         serializer.save()
 
 
@@ -73,7 +70,7 @@ class InviteCodeCreateAPIView(generics.CreateAPIView):
 
 
 class InviteCodeListAPIView(generics.ListAPIView):
-    queryset = InviteCode.objects.all()
+    queryset = InviteCode.objects.select_related("created_by").all()
     serializer_class = InviteCodeSerializer
     permission_classes = [IsAuthenticated]
 
@@ -212,7 +209,7 @@ class UpdateProfileStatusView(APIView):
 class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrChurch]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["status", "church", "ministry_type", "employment_type"]
 
@@ -222,8 +219,9 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if request.user.church_id != instance.church_id:
-            return Response({"detail": "Not authorized."}, status=403)
+        self.check_object_permissions(
+            request, instance
+        )  # ✅ calls has_object_permission
         return super().destroy(request, *args, **kwargs)
 
     @action(
@@ -304,28 +302,34 @@ class MutualInterestViewSet(viewsets.ModelViewSet):
     def mutual_matches(self, request):
         user = request.user
 
+        # Ensure the user is associated with a church
         if not user.church_id:
-            return Response([], status=403)
+            return Response([], status=status.HTTP_403_FORBIDDEN)
 
-        # Optional filter by job_listing
+        # Get all job IDs belonging to the user's church
+        job_ids = list(
+            Job.objects.filter(church=user.church_id).values_list("id", flat=True)
+        )
+
+        # Optional filter: restrict to a specific job_listing
         job_filter = request.query_params.get("job_listing")
-
-        # Get all jobs tied to this user's church
-        job_ids = user.church_id.jobs.values_list("id", flat=True)
-
         if job_filter:
             try:
                 job_filter = int(job_filter)
             except ValueError:
-                return Response({"detail": "Invalid job_listing ID."}, status=400)
+                return Response(
+                    {"detail": "Invalid job_listing ID."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             if job_filter not in job_ids:
                 return Response(
                     {"detail": "Job not found or not associated with your church."},
-                    status=404,
+                    status=status.HTTP_404_NOT_FOUND,
                 )
             job_ids = [job_filter]
 
-        # Find (job, profile) pairs with 2 interest expressions (candidate + church)
+        # Identify mutual pairs: candidate + church both expressed interest
         mutual_pairs = (
             MutualInterest.objects.filter(job_listing_id__in=job_ids)
             .values("job_listing_id", "profile_id")
@@ -337,14 +341,21 @@ class MutualInterestViewSet(viewsets.ModelViewSet):
             (pair["job_listing_id"], pair["profile_id"]) for pair in mutual_pairs
         ]
 
-        # Return only church expressions from this user for mutual matches
+        # Return only the 'church' side of the mutual interest (to avoid duplicate records)
         mutual_qs = MutualInterest.objects.filter(
             expressed_by="church",
+            expressed_by_user=user,
             job_listing_id__in=[j for j, _ in matches],
             profile_id__in=[p for _, p in matches],
-            expressed_by_user=user,
         ).select_related("job_listing", "profile")
 
+        # Apply pagination if enabled
+        page = self.paginate_queryset(mutual_qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Fallback for non-paginated response
         serializer = self.get_serializer(mutual_qs, many=True)
         return Response(serializer.data)
 

@@ -78,7 +78,7 @@ class ChurchViewSet(viewsets.ModelViewSet):
 class InviteCodeViewSet(viewsets.ModelViewSet):
     queryset = InviteCode.objects.select_related("created_by").all()
     serializer_class = InviteCodeSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdminOrChurch]
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)

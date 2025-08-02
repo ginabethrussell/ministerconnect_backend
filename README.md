@@ -24,6 +24,11 @@ MinisterConnect is a Django REST API backend supporting a platform that connects
 - drf-spectacular for API schema generation
 - Render for deployment
 
+## 🖥️ Frontend Repository
+
+- The frontend for MinisterConnect is built with Next.js and can be found here:
+  - 👉 [MinisterConnect Frontend](https://github.com/ginabethrussell/ministerconnect)
+
 ## 🛠️ Local Development Setup
 
 ### 1. Clone the Repository
@@ -64,6 +69,23 @@ AWS_S3_REGION_NAME=your-region-name
 make migrate
 make run
 ```
+
+## ▶️ Running with the Frontend
+
+- The frontend for MinisterConnect is a separate Next.js project:
+  - [👉 MinisterConnect Frontend Repo](https://github.com/ginabethrussell/ministerconnect)
+
+### To run both locally:
+
+- Start the backend, See 🛠️ Local Development Setup
+
+  - By default, this runs on http://localhost:8000.
+
+- Start the frontend (in a separate terminal)
+  - Follow steps in [Minister Connect Frontend README Quick Start: Full Stack](https://github.com/ginabethrussell/ministerconnect/blob/main/README.md#full-stack-frontend--backend)
+  - By default, the frontend app runs on http://localhost:3000.
+  - Make sure the frontend is configured to hit the backend API:
+    - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api You can update this in your frontend’s .env.local file or wherever your API client is configured.
 
 ## 🧪 Running Tests
 

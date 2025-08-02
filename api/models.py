@@ -1,14 +1,14 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
-from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
 
+
 if settings.DEBUG:
-    file_storage = None  # Use default (local)
+    file_storage = None
 else:
     file_storage = S3Boto3Storage()
-
 
 US_STATE_CHOICES = [
     ("AL", "Alabama"),
@@ -77,7 +77,6 @@ INVITE_CODE_STATUS_CHOICES = [
     ("expired", "Expired"),
 ]
 
-
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
@@ -93,11 +92,10 @@ class User(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]  # username is still required by AbstractUser
+    REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
         return self.email
-
 
 class Church(models.Model):
     name = models.CharField(max_length=255)
@@ -125,7 +123,6 @@ class Church(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class InviteCode(models.Model):
     code = models.CharField(max_length=50, unique=True)
@@ -216,7 +213,6 @@ class Profile(models.Model):
             resume=None,  # Remove file reference from DB
         )
 
-
 class Job(models.Model):
     STATUS_CHOICES = [
         ("draft", "Draft"),
@@ -224,7 +220,6 @@ class Job(models.Model):
         ("approved", "Approved"),
         ("rejected", "Rejected"),
     ]
-
     church = models.ForeignKey("Church", on_delete=models.CASCADE, related_name="jobs")
     title = models.CharField(max_length=255)
     ministry_type = models.CharField(max_length=100)
@@ -242,13 +237,11 @@ class Job(models.Model):
     def __str__(self):
         return f"{self.title} at {self.church.name}"
 
-
 class MutualInterest(models.Model):
     EXPRESSOR_CHOICES = [
         ("candidate", "Candidate"),
         ("church", "Church"),
     ]
-
     job_listing = models.ForeignKey(
         "Job", on_delete=models.CASCADE, related_name="mutual_interests"
     )

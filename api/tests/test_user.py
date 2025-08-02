@@ -54,7 +54,7 @@ class UserAPITests(TestCase):
     def test_create_user_success(self):
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
         response = self.client.post(
-            "/api/users/create/", self.valid_payload, format="json"
+            "/api/users/", self.valid_payload, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.count(), 2)
@@ -64,7 +64,7 @@ class UserAPITests(TestCase):
         payload = self.valid_payload.copy()
         del payload["email"]  # Remove required field
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
-        response = self.client.post("/api/users/create/", payload, format="json")
+        response = self.client.post("/api/users/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)
 
@@ -72,17 +72,17 @@ class UserAPITests(TestCase):
         payload = self.valid_payload.copy()
         payload["church_id"] = 9999  # Non-existent church ID
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
-        response = self.client.post("/api/users/create/", payload, format="json")
+        response = self.client.post("/api/users/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("church_id", response.data)
 
     def test_create_user_duplicate(self):
         self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
         # Create the user once
-        self.client.post("/api/users/create/", self.valid_payload, format="json")
+        self.client.post("/api/users/", self.valid_payload, format="json")
         # Try to create the same user again
         response = self.client.post(
-            "/api/users/create/", self.valid_payload, format="json"
+            "/api/users/", self.valid_payload, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)

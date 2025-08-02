@@ -4,7 +4,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, GenericAPIView
 from rest_framework.views import APIView
 from .models import Church, InviteCode, Job, Profile, MutualInterest
 from .permissions import IsChurchUser, IsAdmin, IsAdminOrChurch
@@ -115,7 +115,8 @@ class CandidateRegistrationAPIView(generics.CreateAPIView):
         )
 
 
-class UserMeAPIView(APIView):
+class UserMeAPIView(GenericAPIView):
+    serializer_class=UserMeSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -123,7 +124,8 @@ class UserMeAPIView(APIView):
         return Response(serializer.data)
 
 
-class ResetPasswordAPIView(APIView):
+class ResetPasswordAPIView(GenericAPIView):
+    serializer_class=ResetPasswordSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -148,7 +150,8 @@ class ResetPasswordAPIView(APIView):
         )
 
 
-class ProfileListAPIView(APIView):
+class ProfileListAPIView(GenericAPIView):
+    serializer_class=ProfileSerializer
     permission_classes = [IsAuthenticated, IsAdminOrChurch]
 
     def get(self, request):
@@ -274,7 +277,8 @@ class JobViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class UpdateJobStatusView(APIView):
+class UpdateJobStatusView(GenericAPIView):
+    serializer_class=JobStatusSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def patch(self, request, pk):

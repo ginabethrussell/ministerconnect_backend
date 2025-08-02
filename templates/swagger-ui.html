@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>MinisterConnect API Docs</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"
+    />
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script>
+      const ui = SwaggerUIBundle({
+        url: "/api/schema/",
+        dom_id: "#swagger-ui",
+        presets: [SwaggerUIBundle.presets.apis],
+        layout: "BaseLayout",
+        requestInterceptor: function (req) {
+          const token = localStorage.getItem("swagger_token");
+          if (token) {
+            req.headers["Authorization"] = "Bearer " + token;
+          }
+          return req;
+        },
+      });
+    </script>
+
+    <div style="position: fixed; bottom: 1rem; right: 1rem">
+      <label for="token">JWT Token:</label>
+      <input
+        id="token"
+        type="text"
+        placeholder="Paste token here"
+        style="width: 300px"
+        oninput="localStorage.setItem('swagger_token', this.value)"
+      />
+    </div>
+  </body>
+</html>

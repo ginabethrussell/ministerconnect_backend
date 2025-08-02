@@ -1,5 +1,10 @@
 # MinisterConnect Backend
 
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Django](https://img.shields.io/badge/Django-4.x-green)
+![DRF](https://img.shields.io/badge/DRF-REST_Framework-red)
+![License](https://img.shields.io/badge/license-Proprietary-red)
+
 MinisterConnect is a Django REST API backend supporting a platform that connects ministry candidates with churches. This repository handles core functionality such as user authentication, role-based access control, candidate profiles, job listings, and mutual interest tracking.
 
 ## 📌 Features
@@ -122,7 +127,7 @@ ministerconnect_backend/
 ├── api/                # models, serializers, views, urls, migrations, tests
 ├── ministerconnect_backend/ # settings
 ├── Makefile            # terminal command shortcuts
-├── README              # project description
+├── README.md             # project description
 └── requirements.txt    # project dependencies
 ```
 
@@ -166,10 +171,11 @@ AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1")
 
 ## 🚧 Roadmap
 
-- Email notifications
-- Forgot password email reset flow
-- Admin dashboard metrics
-- Audit log
+- [ ] Super Admin full dashboard
+- [ ] Email notifications
+- [ ] Forgot password email reset flow
+- [ ] Admin dashboard metrics
+- [ ] Audit log
 
 ## Contact
 

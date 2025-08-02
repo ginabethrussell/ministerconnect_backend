@@ -8,6 +8,7 @@ from api.models import InviteCode
 
 User = get_user_model()
 
+
 class InviteCodeAPITests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -20,7 +21,7 @@ class InviteCodeAPITests(TestCase):
             is_active=True,
         )
 
-         # Add the user to the Admin group
+        # Add the user to the Admin group
         admin_group = Group.objects.get_or_create(name="Admin")[0]
         self.user.groups.set([admin_group])
 
@@ -75,10 +76,10 @@ class InviteCodeListAPITests(TestCase):
             is_active=True,
         )
 
-         # Add the user to the Admin group
+        # Add the user to the Admin group
         admin_group = Group.objects.get_or_create(name="Admin")[0]
         self.user.groups.set([admin_group])
-        
+
         refresh = RefreshToken.for_user(self.user)
         self.access_token = str(refresh.access_token)
 

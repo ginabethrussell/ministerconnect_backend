@@ -13,6 +13,7 @@ class IsInAnyGroup(BasePermission):
             and user.groups.filter(name__in=self.group_names).exists()
         )
 
+
 class IsAdminOrChurch(IsInAnyGroup):
     def __init__(self):
         super().__init__("Admin", "Church User")
@@ -27,6 +28,7 @@ class IsAdminOrChurch(IsInAnyGroup):
             obj_church_id = getattr(obj, "church_id", None)
             return obj_church_id == user_church_id
         return False
+
 
 class IsAdmin(IsInAnyGroup):
     def __init__(self):

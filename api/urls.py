@@ -6,9 +6,8 @@ from rest_framework_simplejwt.views import (
 )
 from .views import (
     ChurchViewSet,
-    UserCreateAPIView,
-    InviteCodeCreateAPIView,
-    InviteCodeListAPIView,
+    UserViewSet,
+    InviteCodeViewSet,
     CandidateRegistrationAPIView,
     UserMeAPIView,
     ResetPasswordAPIView,
@@ -29,18 +28,13 @@ router.register(r"churches", ChurchViewSet, basename="church")
 router.register(
     r"approved-candidates", ApprovedCandidateViewSet, basename="approved-candidates"
 )
+router.register(r"invite-codes", InviteCodeViewSet, basename="invitecode")
+router.register(r"users", UserViewSet)
 
 
 urlpatterns = [
-    path("users/create/", UserCreateAPIView.as_view(), name="user-create"),
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path(
-        "invite-codes/create/",
-        InviteCodeCreateAPIView.as_view(),
-        name="invite-code-create",
-    ),
-    path("invite-codes/", InviteCodeListAPIView.as_view(), name="invite-code-list"),
     path(
         "candidates/register/",
         CandidateRegistrationAPIView.as_view(),

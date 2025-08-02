@@ -74,8 +74,15 @@ make test
 ## 📘 API Documentation
 
 - API documentation is auto-generated with drf-spectacular.
+
+### View Locally
+
 - Swagger UI Schema Download YML: http://localhost:8000/api/schema/
 - Swagger API Docs: http://localhost:8000/api/docs/
+
+### Published Docs
+
+- [![View API Docs](https://img.shields.io/badge/View-API_Docs-blue)](https://minister-connect-backend.onrender.com/api/docs/)
 
 ## 👥 User Roles (Groups) & Permissions
 

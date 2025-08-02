@@ -77,6 +77,7 @@ INVITE_CODE_STATUS_CHOICES = [
     ("expired", "Expired"),
 ]
 
+
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
@@ -96,6 +97,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
 
 class Church(models.Model):
     name = models.CharField(max_length=255)
@@ -123,6 +125,7 @@ class Church(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class InviteCode(models.Model):
     code = models.CharField(max_length=50, unique=True)
@@ -213,6 +216,7 @@ class Profile(models.Model):
             resume=None,  # Remove file reference from DB
         )
 
+
 class Job(models.Model):
     STATUS_CHOICES = [
         ("draft", "Draft"),
@@ -236,6 +240,7 @@ class Job(models.Model):
 
     def __str__(self):
         return f"{self.title} at {self.church.name}"
+
 
 class MutualInterest(models.Model):
     EXPRESSOR_CHOICES = [

@@ -10,7 +10,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Church, InviteCode, Job, MutualInterest, Profile 
+from .models import Church, InviteCode, Job, MutualInterest, Profile
 from .permissions import IsAdmin, IsAdminOrChurch, IsChurchUser
 from .serializers import (
     CandidateRegistrationSerializer,
@@ -31,6 +31,7 @@ from .serializers import (
 
 User = get_user_model()
 
+
 class ApprovedCandidateViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated, IsChurchUser]
@@ -39,6 +40,7 @@ class ApprovedCandidateViewSet(viewsets.ReadOnlyModelViewSet):
         return Profile.objects.select_related("user").filter(
             status="approved", user__is_active=True
         )
+
 
 class CandidateRegistrationAPIView(generics.CreateAPIView):
     serializer_class = CandidateRegistrationSerializer
@@ -52,6 +54,7 @@ class CandidateRegistrationAPIView(generics.CreateAPIView):
             {"detail": "Registration successful. Please log in."},
             status=status.HTTP_201_CREATED,
         )
+
 
 class ChurchViewSet(viewsets.ModelViewSet):
     queryset = Church.objects.all()
@@ -71,6 +74,7 @@ class ChurchViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
+
 class InviteCodeViewSet(viewsets.ModelViewSet):
     queryset = InviteCode.objects.select_related("created_by").all()
     serializer_class = InviteCodeSerializer
@@ -86,6 +90,7 @@ class InviteCodeViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
         )
+
 
 class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all()
@@ -104,6 +109,24 @@ class JobViewSet(viewsets.ModelViewSet):
             request, instance
         )  # ✅ calls has_object_permission
         return super().destroy(request, *args, **kwargs)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="approved-jobs",
+        permission_classes=[IsAuthenticated],
+    )
+    def approved_jobs(self, request):
+        queryset = Job.objects.filter(status="approved").order_by("-created_at")
+        # Use the built-in paginator
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Fallback if pagination fails
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -127,6 +150,7 @@ class JobViewSet(viewsets.ModelViewSet):
         # Fallback if pagination fails
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
 
 class MutualInterestViewSet(viewsets.ModelViewSet):
     queryset = MutualInterest.objects.all()
@@ -255,8 +279,9 @@ class MutualInterestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(mutual_qs, many=True)
         return Response(serializer.data)
 
+
 class ProfileListAPIView(GenericAPIView):
-    serializer_class=ProfileSerializer
+    serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated, IsAdminOrChurch]
 
     def get(self, request):
@@ -272,6 +297,7 @@ class ProfileListAPIView(GenericAPIView):
         serializer = ProfileSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+
 class ProfileMeAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -284,6 +310,7 @@ class ProfileMeAPIView(APIView):
             )
         serializer = ProfileSerializer(profile)
         return Response(serializer.data)
+
 
 class ProfileMeUpdateAPIView(RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
@@ -298,6 +325,7 @@ class ProfileMeUpdateAPIView(RetrieveUpdateAPIView):
             for field_name, uploaded_file in request.FILES.items():
                 pass
         return super().update(request, *args, **kwargs)
+
 
 class ProfileResetAPIView(generics.CreateAPIView):
     serializer_class = ProfileResetSerializer
@@ -319,8 +347,9 @@ class ProfileResetAPIView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+
 class UpdateJobStatusView(GenericAPIView):
-    serializer_class=JobStatusSerializer
+    serializer_class = JobStatusSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def patch(self, request, pk):
@@ -330,6 +359,7 @@ class UpdateJobStatusView(GenericAPIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UpdateProfileStatusView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
@@ -342,8 +372,9 @@ class UpdateProfileStatusView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ResetPasswordAPIView(GenericAPIView):
-    serializer_class=ResetPasswordSerializer
+    serializer_class = ResetPasswordSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -365,13 +396,15 @@ class ResetPasswordAPIView(GenericAPIView):
             {"detail": "Password changed successfully."}, status=status.HTTP_200_OK
         )
 
+
 class UserMeAPIView(GenericAPIView):
-    serializer_class=UserMeSerializer
+    serializer_class = UserMeSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = UserMeSerializer(request.user)
         return Response(serializer.data)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()

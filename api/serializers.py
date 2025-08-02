@@ -11,6 +11,7 @@ User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
+
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     groups = serializers.ListField(
@@ -73,6 +74,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             user.groups.add(group)
         return user
 
+
 class CandidateRegistrationSerializer(serializers.Serializer):
     invite_code = serializers.CharField()
     email = serializers.EmailField()
@@ -119,6 +121,7 @@ class CandidateRegistrationSerializer(serializers.Serializer):
         Profile.objects.create(user=user, invite_code=invite, status="draft")
         return user
 
+
 class ChurchSerializer(serializers.ModelSerializer):
     users = UserCreateSerializer(many=True, required=False, write_only=True)
 
@@ -152,6 +155,8 @@ class ChurchSerializer(serializers.ModelSerializer):
         validated_data["name"] = validated_data["name"].strip().title()
         validated_data["city"] = validated_data["city"].strip().title()
 
+        church_user_group, _ = Group.objects.get_or_create(name="Church User")
+
         with transaction.atomic():
             church = super().create(validated_data)
 
@@ -159,7 +164,9 @@ class ChurchSerializer(serializers.ModelSerializer):
                 user_data["church_id"] = church.id
                 serializer = UserCreateSerializer(data=user_data)
                 serializer.is_valid(raise_exception=True)
-                serializer.save()
+                user = serializer.save()
+                # ✅ Assign Church User group
+                user.groups.add(church_user_group)
 
         return church
 
@@ -256,6 +263,7 @@ class InviteCodeSerializer(serializers.ModelSerializer):
     def get_created_by_name(self, obj):
         return obj.created_by.name if obj.created_by else None
 
+
 class ChurchInlineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Church
@@ -266,6 +274,7 @@ class ChurchInlineSerializer(serializers.ModelSerializer):
             "city",
             "state",
         ]
+
 
 class JobSerializer(serializers.ModelSerializer):
     church = ChurchInlineSerializer(read_only=True)
@@ -278,11 +287,13 @@ class JobSerializer(serializers.ModelSerializer):
         validated_data["status"] = "pending"
         return super().create(validated_data)
 
+
 class JobStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Job
         fields = ["id", "status"]
         read_only_fields = ["id"]
+
 
 class MutualInterestSerializer(serializers.ModelSerializer):
     is_mutual = serializers.SerializerMethodField()
@@ -330,10 +341,12 @@ class MutualInterestSerializer(serializers.ModelSerializer):
     def get_candidate_name(self, obj):
         return obj.profile.user.name if obj.profile and obj.profile.user else None
 
+
 class UserSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "first_name", "last_name", "email"]
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     invite_code_string = serializers.SerializerMethodField(read_only=True)
@@ -387,18 +400,20 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-class ProfileResetSerializer(serializers.Serializer):
 
+class ProfileResetSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = self.context["request"].user
         invite_code = user.invite_code
         return Profile.reset_to_draft(user, invite_code)
+
 
 class ProfileStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ["id", "status"]
         read_only_fields = ["id"]
+
 
 class ResetPasswordSerializer(serializers.Serializer):
     temporary_password = serializers.CharField(write_only=True)
@@ -414,6 +429,7 @@ class ResetPasswordSerializer(serializers.Serializer):
                 "New password must be at least 8 characters long."
             )
         return data
+
 
 class UserSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField()
@@ -435,6 +451,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_groups(self, obj):
         return [group.name for group in obj.groups.all()]
+
 
 class UserMeSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField(read_only=True)

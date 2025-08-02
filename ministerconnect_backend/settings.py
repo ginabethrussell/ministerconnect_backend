@@ -61,7 +61,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 50,  # You can adjust to 50 or 100 as needed
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 TEMPLATES = [
@@ -79,7 +79,7 @@ TEMPLATES = [
     },
 ]
 
-TEMPLATES[0]['DIRS'] += [os.path.join(BASE_DIR, 'templates')]
+TEMPLATES[0]["DIRS"] += [os.path.join(BASE_DIR, "templates")]
 
 WSGI_APPLICATION = "ministerconnect_backend.wsgi.application"
 

@@ -18,6 +18,7 @@ from .serializers import (
     JobSerializer,
     JobStatusSerializer,
     UserCreateSerializer,
+    UserSerializer,
     InviteCodeSerializer,
     CandidateRegistrationSerializer,
     UserMeSerializer,
@@ -31,10 +32,26 @@ from .serializers import (
 User = get_user_model()
 
 
-class UserCreateAPIView(generics.CreateAPIView):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserCreateSerializer
+    serializer_class = UserCreateSerializer  # swap with UserSerializer if you have one
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["church_id"]  # filter users by church via ?church_id=
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Optional: limit by current admin’s scope
+        if self.request.user.groups.filter(name="Church User").exists():
+            queryset = queryset.filter(church_id=self.request.user.church_id)
+
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action in ["list", "retrieve", "partial_update", "update"]:
+            return UserSerializer
+        return UserCreateSerializer
 
 
 class ChurchViewSet(viewsets.ModelViewSet):
@@ -49,6 +66,13 @@ class ChurchViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
+    @action(detail=True, methods=["get"])
+    def users(self, request, pk=None):
+        church = self.get_object()
+        users = church.user_set.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
 
 class ApprovedCandidateViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProfileSerializer
@@ -60,19 +84,21 @@ class ApprovedCandidateViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
 
-class InviteCodeCreateAPIView(generics.CreateAPIView):
-    queryset = InviteCode.objects.all()
+class InviteCodeViewSet(viewsets.ModelViewSet):
+    queryset = InviteCode.objects.select_related("created_by").all()
     serializer_class = InviteCodeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdmin]
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
-
-class InviteCodeListAPIView(generics.ListAPIView):
-    queryset = InviteCode.objects.select_related("created_by").all()
-    serializer_class = InviteCodeSerializer
-    permission_classes = [IsAuthenticated]
+    def destroy(self, request, *args, **kwargs):
+        return Response(
+            {
+                "detail": "Invite codes cannot be deleted. Mark as 'inactive' or update expiration instead."
+            },
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
 
 
 class CandidateRegistrationAPIView(generics.CreateAPIView):

@@ -74,6 +74,28 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserSerializer(serializers.ModelSerializer):
+    groups = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "name",
+            "first_name",
+            "last_name",
+            "church_id",
+            "status",
+            "requires_password_change",
+            "groups",
+        ]
+        read_only_fields = ["email", "name", "church_id"]
+
+    def get_groups(self, obj):
+        return [group.name for group in obj.groups.all()]
+
+
 class ResetPasswordSerializer(serializers.Serializer):
     temporary_password = serializers.CharField(write_only=True)
     new_password = serializers.CharField(write_only=True)
@@ -94,15 +116,30 @@ class ChurchSerializer(serializers.ModelSerializer):
     users = UserCreateSerializer(many=True, required=False, write_only=True)
 
     def validate(self, data):
-        name = data["name"].strip().lower()
-        city = data["city"].strip().lower()
-        state = data["state"].upper()
-        if Church.objects.filter(
-            name__iexact=name, city__iexact=city, state=state
-        ).exists():
-            raise serializers.ValidationError(
-                "A church with this name, city, and state already exists."
+        name = data.get("name")
+        city = data.get("city")
+        state = data.get("state")
+
+        # Only run duplicate check if all 3 are present
+        if name and city and state:
+            normalized_name = name.strip().lower()
+            normalized_city = city.strip().lower()
+            normalized_state = state.upper()
+
+            # Exclude self on update
+            existing = Church.objects.filter(
+                name__iexact=normalized_name,
+                city__iexact=normalized_city,
+                state=normalized_state,
             )
+            if self.instance:
+                existing = existing.exclude(pk=self.instance.pk)
+
+            if existing.exists():
+                raise serializers.ValidationError(
+                    "A church with this name, city, and state already exists."
+                )
+
         return data
 
     def create(self, validated_data):
@@ -114,7 +151,7 @@ class ChurchSerializer(serializers.ModelSerializer):
             church = super().create(validated_data)
 
             for user_data in users_data:
-                user_data["church_id"] = church  # assign church foreign key
+                user_data["church_id"] = church.id  # assign church foreign key
                 serializer = UserCreateSerializer(data=user_data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -138,6 +175,44 @@ class ChurchSerializer(serializers.ModelSerializer):
         if not re.match(r"^\d{5}(-\d{4})?$", value):
             raise serializers.ValidationError("Enter a valid US ZIP code.")
         return value
+
+    def update(self, instance, validated_data):
+        users_data = validated_data.pop("users", [])
+
+        # Normalize church fields
+        if "name" in validated_data:
+            validated_data["name"] = validated_data["name"].strip().title()
+        if "city" in validated_data:
+            validated_data["city"] = validated_data["city"].strip().title()
+
+        # Update church fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Handle user create or update
+        for user_data in users_data:
+            user_data["church_id"] = instance.id  # assign FK
+
+            user_id = user_data.get("id")
+            if user_id:
+                # Update existing user
+                try:
+                    user = User.objects.get(id=user_id, church_id=instance.id)
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(
+                        f"User with id {user_id} not found in this church."
+                    )
+
+                serializer = UserCreateSerializer(user, data=user_data, partial=True)
+            else:
+                # Create new user
+                serializer = UserCreateSerializer(data=user_data)
+
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        return instance
 
     class Meta:
         model = Church

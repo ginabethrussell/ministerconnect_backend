@@ -73,6 +73,7 @@ USER_STATUS_CHOICES = [
 
 INVITE_CODE_STATUS_CHOICES = [
     ("active", "Active"),
+    ("inactive", "Inactive"),
     ("expired", "Expired"),
 ]
 

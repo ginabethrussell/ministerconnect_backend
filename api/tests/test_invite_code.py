@@ -1,15 +1,12 @@
-# These tests use Django's test framework, which creates a temporary database for testing.
-# All data created, updated, or deleted in these tests is isolated and does not affect your real database.
-# After the tests finish, the test database is deleted automatically.
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from rest_framework.test import APIClient
-from django.contrib.auth import get_user_model
-from api.models import InviteCode
 from rest_framework_simplejwt.tokens import RefreshToken
+from api.models import InviteCode
+
 
 User = get_user_model()
-
 
 class InviteCodeAPITests(TestCase):
     def setUp(self):
@@ -22,6 +19,11 @@ class InviteCodeAPITests(TestCase):
             status="active",
             is_active=True,
         )
+
+         # Add the user to the Admin group
+        admin_group = Group.objects.get_or_create(name="Admin")[0]
+        self.user.groups.set([admin_group])
+
         refresh = RefreshToken.for_user(self.user)
         self.access_token = str(refresh.access_token)
 
@@ -32,7 +34,7 @@ class InviteCodeAPITests(TestCase):
             "event": "Spring 2024 Church Registration",
             "expires_at": "2024-12-31T23:59:59Z",
         }
-        response = self.client.post("/api/invite-codes/create/", payload, format="json")
+        response = self.client.post("/api/invite-codes/", payload, format="json")
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["code"], "CHURCH2024")
         self.assertEqual(response.data["event"], "Spring 2024 Church Registration")
@@ -46,7 +48,7 @@ class InviteCodeAPITests(TestCase):
             "event": "Spring 2025 Church Registration",
             "expires_at": "2025-12-31T23:59:59Z",
         }
-        response = self.client.post("/api/invite-codes/create/", payload, format="json")
+        response = self.client.post("/api/invite-codes/", payload, format="json")
         self.assertEqual(response.status_code, 401)
 
     def test_create_invite_code_missing_fields(self):
@@ -55,7 +57,7 @@ class InviteCodeAPITests(TestCase):
             "event": "Spring 2024 Church Registration"
             # Missing 'code' and 'expires_at'
         }
-        response = self.client.post("/api/invite-codes/create/", payload, format="json")
+        response = self.client.post("/api/invite-codes/", payload, format="json")
         self.assertEqual(response.status_code, 400)
         self.assertIn("code", response.data)
         self.assertIn("expires_at", response.data)
@@ -72,6 +74,11 @@ class InviteCodeListAPITests(TestCase):
             status="active",
             is_active=True,
         )
+
+         # Add the user to the Admin group
+        admin_group = Group.objects.get_or_create(name="Admin")[0]
+        self.user.groups.set([admin_group])
+        
         refresh = RefreshToken.for_user(self.user)
         self.access_token = str(refresh.access_token)
 

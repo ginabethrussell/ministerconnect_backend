@@ -1,99 +1,183 @@
-# Minister Connect Backend
+# MinisterConnect Backend
 
-## API Endpoints
+MinisterConnect is a Django REST API backend supporting a platform that connects ministry candidates with churches. This repository handles core functionality such as user authentication, role-based access control, candidate profiles, job listings, and mutual interest tracking.
 
-### Candidate Registration
+## 📌 Features
 
-- `POST /api/candidates/register/`
-  - Registers a new candidate user.
-  - **Required fields:** `invite_code`, `email`, `password`, `first_name`, `last_name`
-  - **Example request:**
-    ```json
-    {
-      "invite_code": "CANDIDATE2024",
-      "email": "candidate@example.com",
-      "password": "securepassword",
-      "first_name": "Jane",
-      "last_name": "Doe"
-    }
-    ```
-  - **Response:**
-    ```json
-    { "detail": "Registration successful. Please log in." }
-    ```
+- Role-based user accounts (`candidate`, `church`, `admin`, `superadmin`)
+- Invite-code based registration
+- Candidate profile creation, editing, submission, and admin approval
+- Church job listing creation and management
+- Mutual interest system (churches and candidates)
+- Password reset flow using temporary credentials
+- Candidate profile image or resume pdf upload (local or AWS S3)
+- Admin management via Django admin
+- Swagger/OpenAPI documentation
 
-### Profile Endpoints
+## ⚙️ Tech Stack
 
-- `GET /api/profile/me/` — Retrieve the authenticated user's profile.
-- `PATCH /api/profile/me/` — Update fields on the authenticated user's profile.
-- `PUT /api/profile/me/` — Replace the authenticated user's profile.
-- `POST /api/profile/reset/` — Reset the profile to a blank draft (removes resume and clears fields).
+- Python 3.10+
+- Django 4.x
+- Django REST Framework
+- PostgreSQL
+- AWS S3 for media storage
+- drf-spectacular for API schema generation
+- Render for deployment
 
-#### Profile Status Logic
+## 🖥️ Frontend Repository
 
-- **Draft:** Can be saved with incomplete fields. Minimal validation is enforced.
-- **Pending:** All required fields (`phone`, `street_address`, `city`, `state`, `zipcode`, `resume`) must be filled to submit.
+- The frontend for MinisterConnect is built with Next.js and can be found here:
+  - 👉 [MinisterConnect Frontend](https://github.com/ginabethrussell/ministerconnect)
 
-#### Resume Upload
+## 🛠️ Local Development Setup
 
-- Field: `resume` (file, PDF, max 5MB)
-- To replace, upload a new file; to remove, use the reset endpoint.
-- Resume is deleted from storage and DB reference when profile is reset.
+### 1. Clone the Repository
 
-#### Example PATCH request (to submit as pending):
-```json
-{
-  "status": "pending",
-  "phone": "+15551234567",
-  "street_address": "123 Main St",
-  "city": "Lexington",
-  "state": "KY",
-  "zipcode": "40502",
-  "resume": <PDF file>
-}
+```bash
+git clone https://github.com/ginabethrussell/ministerconnect_backend.git
+cd ministerconnect_backend
 ```
 
-#### Example response for GET /api/profile/me/
-```json
-{
-  "id": 1,
-  "phone": "+15551234567",
-  "invite_code": 2,
-  "invite_code_string": "CANDIDATE2024",
-  "street_address": "123 Main St",
-  "city": "Lexington",
-  "state": "KY",
-  "zipcode": "40502",
-  "status": "draft",
-  "resume": "https://your-bucket.s3.amazonaws.com/resumes/GBR_RESUME.pdf",
-  "video_url": null,
-  "placement_preferences": ["Youth Ministry"],
-  "submitted_at": null,
-  "created_at": "2025-07-19T18:20:02.272847Z",
-  "updated_at": "2025-07-19T18:37:23.310730Z",
-  "user": 17
-}
+### 2. Set Up the Virtual Environment
+
+```bash
+python -m venv venv
+source venv/bin/activate
 ```
 
----
+### 3. Install Dependencies
 
-## Profile Reset
+```bash
+pip install -r requirements.txt
+```
 
-- `POST /api/profile/reset/` — Resets the profile to a blank draft, removes resume from storage and DB, and clears all fields except user and invite_code.
-- Only the authenticated user can reset their own profile.
-- **Response:**
-  ```json
-  {
-    "detail": "Profile reset to draft successfully.",
-    "profile": { ...profile fields... }
-  }
-  ```
+### 4. Environment Variables
 
----
+```bash
+DEBUG=True
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgres://user:password@localhost/dbname
+AWS_ACCESS_KEY_ID=your-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_STORAGE_BUCKET_NAME=your-s3-bucket-name
+AWS_S3_REGION_NAME=your-region-name
+```
 
-## Status Table
+### 5. Run Migrations & Start Server
 
-| Status   | Validation Level         | User Experience                |
-|----------|-------------------------|--------------------------------|
-| draft    | Minimal (allow partial) | Save progress, return later    |
-| pending  | Strict (all required)   | Must complete all fields       | 
+```bash
+make migrate
+make run
+```
+
+## ▶️ Running with the Frontend
+
+- The frontend for MinisterConnect is a separate Next.js project:
+  - [👉 MinisterConnect Frontend Repo](https://github.com/ginabethrussell/ministerconnect)
+
+### To run both locally:
+
+- Start the backend, See 🛠️ Local Development Setup
+
+  - By default, this runs on http://localhost:8000.
+
+- Start the frontend (in a separate terminal)
+  - Follow steps in [Minister Connect Frontend README Quick Start: Full Stack](https://github.com/ginabethrussell/ministerconnect/blob/main/README.md#full-stack-frontend--backend)
+  - By default, the frontend app runs on http://localhost:3000.
+  - Make sure the frontend is configured to hit the backend API:
+    - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api You can update this in your frontend’s .env.local file or wherever your API client is configured.
+
+## 🧪 Running Tests
+
+```bash
+make test
+```
+
+## 📘 API Documentation
+
+- API documentation is auto-generated with drf-spectacular.
+
+### View Locally
+
+- Swagger UI Schema Download YML: http://localhost:8000/api/schema/
+- Swagger API Docs: http://localhost:8000/api/docs/
+
+### Published Docs
+
+- [![View API Docs](https://img.shields.io/badge/View-API_Docs-blue)](https://minister-connect-backend.onrender.com/api/docs/)
+
+## 👥 User Roles (Groups) & Permissions
+
+| Role       | Capabilities                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| Candidate  | Register via invite code, create/edit profile, express interest in jobs                           |
+| Church     | Update church, add church users, post jobs, express interest in candidates, view mutual interests |
+| Admin      | Manage churches and invite codes, review/approve candidate profiles , review/approve jobs         |
+| Superadmin | Full access including invite code generation and admin functions                                  |
+
+## 🗂️ Project Structure
+
+```bash
+ministerconnect_backend/
+├── api/                # models, serializers, views, urls, migrations, tests
+├── ministerconnect_backend/ # settings
+├── Makefile            # terminal command shortcuts
+├── README              # project description
+└── requirements.txt    # project dependencies
+```
+
+## 🚀 Deployment & Hosting
+
+- This backend is deployed using Render with the following infrastructure:
+
+### ⚙️ Services
+
+| Component          | Provider             | Notes                                         |
+| ------------------ | -------------------- | --------------------------------------------- |
+| Backend API        | Render (Web Service) | Deploys from `main` branch of this repo       |
+| PostgreSQL DB      | Render (PostgreSQL)  | Managed database with automatic backups       |
+| Media File Storage | AWS S3 Bucket        | Used for candidate profile images and resumes |
+
+### 🔐 Environment Variables
+
+- These are set in the Render Dashboard:
+
+```bash
+DEBUG=False
+SECRET_KEY=your-production-secret
+DATABASE_URL=provided-by-render
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_STORAGE_BUCKET_NAME=your-s3-bucket-name
+AWS_S3_REGION_NAME=your-aws-region
+```
+
+## 🗂️ Media File Handling
+
+- Uploaded media files (e.g., profile photos) are stored in an AWS S3 bucket using django-storages. Ensure the following settings are present in settings.py:
+
+```bash
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
+AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1")
+```
+
+## 🚧 Roadmap
+
+- Email notifications
+- Forgot password email reset flow
+- Admin dashboard metrics
+- Audit log
+
+## Contact
+
+- For questions about this project or more information, contact Ginabeth Russell • ginabeth@tinysitelab.com
+
+## 📝 License
+
+- This code is proprietary and owned by Tiny Site Lab.
+- All rights are reserved. Unauthorized use, distribution, or modification is strictly prohibited.
+
+- For licensing or partnership inquiries, contact ginabeth@tinysitelab.com.

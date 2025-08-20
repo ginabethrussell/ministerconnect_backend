@@ -17,12 +17,6 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# Allow requests from your frontend
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://ministerconnect.vercel.app",
-]
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,12 +36,27 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
+]
+
+# Allow requests from your frontend
+CORS_ALLOWED_ORIGINS = [
+    # Deployed frontend
+    "https://ministerconnect.org",
+    "https://www.ministerconnect.org",
+    # Testing
+    "http://localhost:3000",
+    "https://ministerconnect.vercel.app",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://ministerconnect.org",
+    "https://www.ministerconnect.org",
 ]
 
 AUTH_USER_MODEL = "api.User"
@@ -116,11 +125,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
